@@ -19,6 +19,12 @@ export function construireRequete(spec: any, role: string) {
         return c;
     };
 
+    const valeurValide = (v: any) => {
+        const ok = (x: any) => ["string", "number", "boolean"].includes(typeof x);
+        if (Array.isArray(v) ? v.every(ok) : ok(v)) return v;
+        throw new ErreurValidation(`Valeur de filtre invalide : ${JSON.stringify(v)}`);
+    };
+
     const params: any[] = [];
     let sql: string;
 
@@ -41,14 +47,15 @@ export function construireRequete(spec: any, role: string) {
         const col = colonneValide(f.field);
         const op = OPERATEURS[f.op];
         if (!op) throw new ErreurValidation(`Opérateur interdit : ${f.op}`);
+        const valeur = valeurValide(f.value);
 
         sql += params.length === 0 ? " WHERE " : " AND ";
         if (op === "IN") {
-            const valeurs = (Array.isArray(f.value) ? f.value : [f.value])
+            const valeurs = (Array.isArray(valeur) ? valeur : [valeur])
                 .map((v: any) => { params.push(v); return `$${params.length}`; });
             sql += `${col} IN (${valeurs.join(", ")})`;
         } else {
-            params.push(op === "ILIKE" ? `%${f.value}%` : f.value);
+            params.push(op === "ILIKE" ? `%${valeur}%` : valeur);
             sql += `${col} ${op} $${params.length}`;
         }
     }

@@ -43,3 +43,21 @@ export function cataloguePourRole(role: string) {
         .map(([nom, v]) => `${nom} — ${v.description}\n  colonnes : ${v.colonnes.join(", ")}`)
         .join("\n\n");
 }
+
+/** Définition métier des colonnes booléennes. Source unique de vérité. */
+export const GLOSSAIRE: Record<string, string> = {
+    is_unpaid: "ont un reste à payer",
+    is_overdue: "sont en retard (échéance dépassée)",
+    is_late: "sont en retard de livraison",
+};
+
+/** Libellés lisibles des colonnes de montant. */
+export const ETIQUETTES: Record<string, string> = {
+    subtotal_amount: "montant hors taxe",
+    tax_amount: "montant de taxe",
+    total_amount: "montant TTC",
+    paid_amount: "montant déjà payé",
+    remaining_amount: "reste à payer",
+    amount: "montant",
+    line_total: "total de ligne",
+};

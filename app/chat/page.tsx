@@ -2,11 +2,17 @@
 
 import { useState } from "react";
 
-type Message = { role: "user" | "assistant"; content: string };
+type Message = {
+    role: "user" | "assistant";
+    content: string;
+    lignes?: any[];
+    refus?: boolean;
+};
 
 export default function ChatPage() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState("");
+    const [conversationId, setConversationId] = useState<string | null>(null);
 
     async function envoyer() {
         const question = input.trim();
@@ -19,18 +25,18 @@ export default function ChatPage() {
             const res = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ question }),
+                body: JSON.stringify({ question, conversationId }),
             });
 
             const data = await res.json();
-            const content =
-                data?.erreur
-                    ? `Erreur: ${data.erreur}`
-                    : data?.spec
-                        ? JSON.stringify(data.spec, null, 2)
-                        : JSON.stringify(data, null, 2);
+            if (data.conversationId) setConversationId(data.conversationId);
 
-            setMessages((m) => [...m, { role: "assistant", content }]);
+            setMessages((m) => [...m, {
+                role: "assistant",
+                content: data.texte ?? data.erreur ?? "Réponse vide.",
+                lignes: data.lignes,
+                refus: data.refus === true,
+            }]);
         } catch (error) {
             setMessages((m) => [
                 ...m,
@@ -53,12 +59,34 @@ export default function ChatPage() {
                 {messages.map((m, i) => (
                     <div
                         key={i}
-                        className={`p-3 rounded-lg max-w-[80%] whitespace-pre-wrap ${m.role === "user"
-                            ? "bg-blue-600 text-white ml-auto"
-                            : "bg-gray-800 text-gray-100 font-mono text-sm"
+                        className={`p-3 rounded-lg ${m.role === "user"
+                            ? "bg-blue-600 text-white ml-auto max-w-[80%]"
+                            : m.refus
+                                ? "bg-amber-950 text-amber-200 border border-amber-800 max-w-full"
+                                : "bg-gray-800 text-gray-100 max-w-full"
                             }`}
                     >
                         {m.content}
+                        {m.lignes && m.lignes.length > 0 && (
+                            <table className="mt-3 w-full text-sm border-collapse">
+                                <thead>
+                                    <tr className="border-b border-gray-600">
+                                        {Object.keys(m.lignes[0]).map((c) => (
+                                            <th key={c} className="text-left py-1 pr-4 font-medium">{c}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {m.lignes.map((l, i) => (
+                                        <tr key={i} className="border-b border-gray-700/50">
+                                            {Object.values(l).map((v, j) => (
+                                                <td key={j} className="py-1 pr-4">{String(v ?? "")}</td>
+                                            ))}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
                     </div>
                 ))}
             </div>
