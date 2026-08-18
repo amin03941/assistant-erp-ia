@@ -8,6 +8,7 @@ type Message = {
     role: "user" | "assistant";
     content: string;
     lignes?: any[];
+    libelles?: Record<string, string>;
     refus?: boolean;
     heure: string;
 };
@@ -61,6 +62,7 @@ export default function ChatPage() {
                 role: "assistant",
                 content: data.texte ?? data.erreur ?? "Réponse vide.",
                 lignes: data.lignes,
+                libelles: data.libelles,
                 refus: data.refus === true,
                 heure: maintenant(),
             }]);
@@ -151,7 +153,7 @@ export default function ChatPage() {
                                                 <tr className="border-b border-[#E8EAF2] text-[#6B7089]">
                                                     {Object.keys(m.lignes[0]).map((c) => (
                                                         <th key={c} className="whitespace-nowrap py-2 pr-5 text-left font-medium">
-                                                            {c}
+                                                            {m.libelles?.[c] ?? c}
                                                         </th>
                                                     ))}
                                                 </tr>

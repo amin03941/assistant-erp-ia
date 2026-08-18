@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { analyserQuestion, redigerReponse } from "@/lib/llm";
+import { analyserQuestion } from "@/lib/llm";
+import { synthetiser } from "@/lib/synthese";
 import { construireRequete, ErreurValidation } from "@/lib/validateur";
 import { dbReadOnly } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import * as conv from "@/lib/conversations";
+import { CATALOGUE } from "@/lib/catalogue";
 
 export async function POST(req: NextRequest) {
     const debut = Date.now();
@@ -16,7 +18,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ erreur: "Question trop longue." }, { status: 400 });
     }
 
-    const session = await getSession();
+    let session;
+    try {
+        session = await getSession();
+    } catch {
+        return NextResponse.json({ erreur: "Session expirée. Reconnectez-vous." }, { status: 401 });
+    }
 
     // Conversation : création, ou vérification que celle fournie appartient bien à l'utilisateur.
     let convId: string = conversationId;
@@ -61,7 +68,7 @@ export async function POST(req: NextRequest) {
         }
 
         const res = await dbReadOnly.query(sql, params);
-        const texte = await redigerReponse(question, res.rows);
+        const texte = synthetiser(spec, res.rows);
 
         const msgAssist = await conv.ajouterMessage(convId, "ASSISTANT", texte, {
             lignes: res.rows, sql,
@@ -71,7 +78,11 @@ export async function POST(req: NextRequest) {
             row_count: res.rowCount, duration_ms: Date.now() - debut, executed_at: new Date(),
         });
 
-        return NextResponse.json({ conversationId: convId, texte, lignes: res.rows, sql });
+        const vue = CATALOGUE[spec.view];
+        const libelles = Object.fromEntries(
+            Object.entries(vue?.colonnes ?? {}).map(([k, c]) => [k, c.libelle])
+        );
+        return NextResponse.json({ conversationId: convId, texte, lignes: res.rows, libelles, sql });
 
     } catch (e) {
         console.error(e);

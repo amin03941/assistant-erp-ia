@@ -1,7 +1,8 @@
 import Image from "next/image";
+import { signOut } from "@/auth";
 import {
     Sparkles, LayoutDashboard, Users, Package, ClipboardList,
-    FileText, CreditCard, ShoppingCart, BarChart3, Settings, HelpCircle,
+    FileText, CreditCard, ShoppingCart, BarChart3, Settings, HelpCircle, LogOut,
 } from "lucide-react";
 
 const MODULES = [
@@ -75,6 +76,17 @@ export default function Sidebar({ nom, role }: { nom: string; role: string }) {
                         <p className="truncate text-sm font-medium">{nom}</p>
                         <p className="text-xs text-white/45">{ROLES[role] ?? role}</p>
                     </div>
+                    <form
+                        action={async () => {
+                            "use server";
+                            await signOut({ redirectTo: "/login" });
+                        }}
+                        className="ml-auto"
+                    >
+                        <button type="submit" aria-label="Se déconnecter" className="text-white/40 hover:text-white">
+                            <LogOut size={16} />
+                        </button>
+                    </form>
                 </div>
             </div>
         </aside>

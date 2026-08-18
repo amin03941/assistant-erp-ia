@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { cataloguePourRole } from "./catalogue";
-import { calculerFaits, verifier, phraseDeterministe } from "./synthese";
+
 
 const OLLAMA = process.env.OLLAMA_URL ?? "http://localhost:11434";
 const MODELE_LOCAL = process.env.OLLAMA_MODEL ?? "qwen3.5:9b";
@@ -154,6 +154,11 @@ RÈGLE DE PÉRIMÈTRE — applique-la strictement :
 Si la question demande une notion ou un calcul qui ne peut pas être obtenu à partir des colonnes listées ci-dessus (marge, coût d'achat, rentabilité, bénéfice, prévision), réponds {"ok":false,"raison":"..."}.
 Ne renvoie JAMAIS des colonnes approchantes en espérant qu'elles suffisent : une réponse partielle à côté de la question est considérée comme une erreur grave.
 
+FORME DE LA RÉPONSE :
+Si la question commence par "combien", "quel est le nombre", "quel est le total", "quelle est la somme" ou "quel est le montant total", utilise obligatoirement "aggregate" et ne renvoie aucune liste de lignes.
+- "combien de clients" → {"ok":true,"view":"v_customers","aggregate":{"fn":"count"}}
+- "montant total restant à payer" → {"ok":true,"view":"v_sales_invoices","filters":[{"field":"is_unpaid","op":"eq","value":true}],"aggregate":{"fn":"sum","field":"remaining_amount"}}
+
 QUESTION ACTUELLE : ${question}`;
 
     const texte = await appeler(prompt, SCHEMA_SPEC);
@@ -165,34 +170,4 @@ QUESTION ACTUELLE : ${question}`;
     }
 }
 
-export async function redigerReponse(question: string, lignes: any[]) {
-    if (lignes.length === 0) return "Aucun résultat ne correspond à cette demande.";
 
-    const { faits, valeurs } = calculerFaits(lignes);
-    const repli = phraseDeterministe(faits);
-
-    const prompt = `Rédige UNE phrase en français pour introduire un tableau déjà affiché.
-
-FAITS VÉRIFIÉS — seule source autorisée :
-${faits.map((f) => `- ${f}`).join("\n")}
-
-RÈGLES :
-- Deux chiffres maximum : le nombre de lignes, et le fait le plus utile à la question.
-- N'invente aucun nombre. Ne recalcule rien.
-- Ne cite aucun identifiant ni nom de client.
-- Reprends exactement le vocabulaire des faits : "reste à payer" et "en retard" ne sont pas synonymes.
-- Une seule phrase, sans conclusion ni interprétation.
-
-QUESTION : ${question}`;
-
-    try {
-        const texte = (await appeler(prompt, null)).trim();
-        if (!texte || !verifier(texte, valeurs)) {
-            console.warn("Phrase rejetée par le vérificateur :", texte);
-            return repli;
-        }
-        return texte;
-    } catch {
-        return repli;
-    }
-}

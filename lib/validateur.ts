@@ -1,4 +1,4 @@
-import { CATALOGUE } from "./catalogue";
+import { CATALOGUE, colonnesDe } from "./catalogue";
 
 const OPERATEURS: Record<string, string> = {
     eq: "=", neq: "<>", gt: ">", gte: ">=", lt: "<", lte: "<=", like: "ILIKE", in: "IN",
@@ -15,7 +15,7 @@ export function construireRequete(spec: any, role: string) {
     if (!vue.roles.includes(role)) throw new ErreurValidation(`Vue non autorisée pour le rôle ${role}`);
 
     const colonneValide = (c: string) => {
-        if (!vue.colonnes.includes(c)) throw new ErreurValidation(`Colonne inconnue : ${c}`);
+        if (!(c in vue.colonnes)) throw new ErreurValidation(`Colonne inconnue : ${c}`);
         return c;
     };
 
@@ -38,7 +38,8 @@ export function construireRequete(spec: any, role: string) {
         sql = `SELECT ${projection} FROM ${spec.view}`;
         spec._groupes = groupes;
     } else {
-        const cols = (spec.select?.length ? spec.select : vue.colonnes).map(colonneValide);
+        const fallback = colonnesDe(vue);
+        const cols = (spec.select?.length ? spec.select : fallback).map(colonneValide);
         sql = `SELECT ${cols.join(", ")} FROM ${spec.view}`;
     }
 

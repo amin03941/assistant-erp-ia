@@ -1,46 +1,131 @@
+export type Colonne = {
+    libelle: string;
+    type: "texte" | "montant" | "nombre" | "date" | "booleen" | "duree";
+    sens?: string;
+    resume?: boolean;
+};
+
 export type Vue = {
-    colonnes: string[];
+    entite: { singulier: string; pluriel: string; genre: "m" | "f" };
+    colonnes: Record<string, Colonne>;
     description: string;
     roles: string[];
 };
 
 export const CATALOGUE: Record<string, Vue> = {
-    v_customers: {
-        colonnes: ["reference", "name", "email", "phone", "payment_terms_days", "status"],
-        description: "Clients de l'entreprise.",
-        roles: ["SALES", "ACCOUNTANT", "MANAGER"],
-    },
-    v_products: {
-        colonnes: ["reference", "name", "category", "product_type", "unit", "sale_price", "tax_rate", "stock_quantity", "status"],
-        description: "Produits et services. Sans prix d'achat.",
-        roles: ["SALES", "ACCOUNTANT", "MANAGER"],
-    },
-    v_sales_orders: {
-        colonnes: ["reference", "customer_reference", "customer_name", "order_date", "expected_delivery_date", "status", "total_amount", "is_late", "days_late"],
-        description: "Commandes clients. is_late = commande confirmée dont la livraison prévue est dépassée.",
-        roles: ["SALES", "MANAGER"],
-    },
     v_sales_invoices: {
-        colonnes: ["invoice_number", "customer_reference", "customer_name", "order_reference", "invoice_date", "due_date", "status", "subtotal_amount", "tax_amount", "total_amount", "paid_amount", "remaining_amount", "is_unpaid", "is_overdue", "days_overdue"],
+        entite: { singulier: "facture de vente", pluriel: "factures de vente", genre: "f" },
         description: "Factures de vente. is_unpaid = reste à payer. is_overdue = impayée et échéance dépassée.",
         roles: ["ACCOUNTANT", "MANAGER"],
+        colonnes: {
+            invoice_number: { libelle: "numéro de facture", type: "texte" },
+            customer_reference: { libelle: "référence client", type: "texte" },
+            customer_name: { libelle: "client", type: "texte" },
+            order_reference: { libelle: "commande liée", type: "texte" },
+            invoice_date: { libelle: "date de facture", type: "date" },
+            due_date: { libelle: "échéance", type: "date" },
+            status: { libelle: "statut", type: "texte" },
+            subtotal_amount: { libelle: "montant hors taxe", type: "montant" },
+            tax_amount: { libelle: "montant de taxe", type: "montant" },
+            total_amount: { libelle: "montant TTC", type: "montant" },
+            paid_amount: { libelle: "montant payé", type: "montant" },
+            remaining_amount: { libelle: "reste à payer", type: "montant", resume: true },
+            is_unpaid: { libelle: "avec reste à payer", type: "booleen", sens: "ayant un reste à payer" },
+            is_overdue: { libelle: "en retard", type: "booleen", sens: "en retard de paiement" },
+            days_overdue: { libelle: "jours de retard", type: "duree" },
+        },
     },
+
+    v_customers: {
+        entite: { singulier: "client", pluriel: "clients", genre: "m" },
+        description: "Clients de l'entreprise.",
+        roles: ["SALES", "ACCOUNTANT", "MANAGER"],
+        colonnes: {
+            reference: { libelle: "référence", type: "texte" },
+            name: { libelle: "nom", type: "texte" },
+            email: { libelle: "email", type: "texte" },
+            phone: { libelle: "téléphone", type: "texte" },
+            payment_terms_days: { libelle: "délai de paiement (jours)", type: "nombre" },
+            status: { libelle: "statut", type: "texte" },
+        },
+    },
+
+    v_products: {
+        entite: { singulier: "produit", pluriel: "produits", genre: "m" },
+        description: "Produits et services. Sans prix d'achat.",
+        roles: ["SALES", "ACCOUNTANT", "MANAGER"],
+        colonnes: {
+            reference: { libelle: "référence", type: "texte" },
+            name: { libelle: "nom", type: "texte" },
+            category: { libelle: "catégorie", type: "texte" },
+            product_type: { libelle: "type de produit", type: "texte" },
+            unit: { libelle: "unité", type: "texte" },
+            sale_price: { libelle: "prix de vente", type: "montant" },
+            tax_rate: { libelle: "taux de taxe", type: "nombre" },
+            stock_quantity: { libelle: "quantité en stock", type: "nombre" },
+            status: { libelle: "statut", type: "texte" },
+        },
+    },
+
+    v_sales_orders: {
+        entite: { singulier: "commande client", pluriel: "commandes clients", genre: "f" },
+        description: "Commandes clients. is_late = commande confirmée dont la livraison prévue est dépassée.",
+        roles: ["SALES", "MANAGER"],
+        colonnes: {
+            reference: { libelle: "référence", type: "texte" },
+            customer_reference: { libelle: "référence client", type: "texte" },
+            customer_name: { libelle: "client", type: "texte" },
+            order_date: { libelle: "date de commande", type: "date" },
+            expected_delivery_date: { libelle: "date de livraison prévue", type: "date" },
+            status: { libelle: "statut", type: "texte" },
+            total_amount: { libelle: "montant total", type: "montant" },
+            is_late: { libelle: "en retard de livraison", type: "booleen", sens: "en retard de livraison" },
+            days_late: { libelle: "jours de retard", type: "duree" },
+        },
+    },
+
     v_sales_invoice_items: {
-        colonnes: ["invoice_number", "customer_name", "product_reference", "product_name", "description", "quantity", "unit_price", "line_total", "invoice_date", "invoice_status"],
+        entite: { singulier: "ligne de facture", pluriel: "lignes de facture", genre: "f" },
         description: "Lignes de facture de vente. Sert au chiffre d'affaires par produit.",
         roles: ["ACCOUNTANT", "MANAGER"],
+        colonnes: {
+            invoice_number: { libelle: "numéro de facture", type: "texte" },
+            customer_name: { libelle: "client", type: "texte" },
+            product_reference: { libelle: "référence produit", type: "texte" },
+            product_name: { libelle: "produit", type: "texte" },
+            description: { libelle: "description", type: "texte" },
+            quantity: { libelle: "quantité", type: "nombre" },
+            unit_price: { libelle: "prix unitaire", type: "montant" },
+            line_total: { libelle: "total de ligne", type: "montant" },
+            invoice_date: { libelle: "date de facture", type: "date" },
+            invoice_status: { libelle: "statut de la facture", type: "texte" },
+        },
     },
+
     v_customer_payments: {
-        colonnes: ["reference", "customer_name", "invoice_number", "payment_date", "amount", "payment_method", "status"],
+        entite: { singulier: "paiement client", pluriel: "paiements clients", genre: "m" },
         description: "Paiements clients. Seuls ceux au statut CONFIRMED comptent.",
         roles: ["ACCOUNTANT", "MANAGER"],
+        colonnes: {
+            reference: { libelle: "référence", type: "texte" },
+            customer_name: { libelle: "client", type: "texte" },
+            invoice_number: { libelle: "numéro de facture", type: "texte" },
+            payment_date: { libelle: "date de paiement", type: "date" },
+            amount: { libelle: "montant", type: "montant" },
+            payment_method: { libelle: "méthode de paiement", type: "texte" },
+            status: { libelle: "statut", type: "texte" },
+        },
     },
 };
+
+export function colonnesDe(vue: Vue) {
+    return Object.keys(vue.colonnes);
+}
 
 export function cataloguePourRole(role: string) {
     return Object.entries(CATALOGUE)
         .filter(([, v]) => v.roles.includes(role))
-        .map(([nom, v]) => `${nom} — ${v.description}\n  colonnes : ${v.colonnes.join(", ")}`)
+        .map(([nom, v]) => `${nom} — ${v.description}\n  colonnes : ${colonnesDe(v).join(", ")}`)
         .join("\n\n");
 }
 
