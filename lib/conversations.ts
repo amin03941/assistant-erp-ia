@@ -103,3 +103,28 @@ export async function dernieresReferences(conversationId: string) {
     const cle = Object.keys(lignes[0])[0];
     return { colonne: cle, valeurs: lignes.slice(0, 10).map((l: any) => l[cle]) };
 }
+
+/** Conversations de l'utilisateur, la plus récente d'abord. */
+export async function listerConversations(userId: string) {
+    const r = await db.query(
+        `SELECT id, title, updated_at
+     FROM conversations
+     WHERE user_id = $1 AND status = 'ACTIVE'
+     ORDER BY updated_at DESC
+     LIMIT 30`,
+        [userId]
+    );
+    return r.rows;
+}
+
+/** Messages d'une conversation, dans l'ordre, avec leurs résultats. */
+export async function messagesDe(conversationId: string) {
+    const r = await db.query(
+        `SELECT sender, content, structured_data, created_at
+     FROM messages
+     WHERE conversation_id = $1
+     ORDER BY created_at ASC`,
+        [conversationId]
+    );
+    return r.rows;
+}

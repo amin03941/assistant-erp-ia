@@ -70,18 +70,19 @@ export async function POST(req: NextRequest) {
         const res = await dbReadOnly.query(sql, params);
         const texte = synthetiser(spec, res.rows);
 
+        const vue = CATALOGUE[spec.view];
+        const libelles = Object.fromEntries(
+            Object.entries(vue?.colonnes ?? {}).map(([k, c]) => [k, c.libelle])
+        );
+
         const msgAssist = await conv.ajouterMessage(convId, "ASSISTANT", texte, {
-            lignes: res.rows, sql,
+            lignes: res.rows, libelles, sql,
         });
         await conv.cloturerRequete(reqId, {
             status: "EXECUTED", generated_sql: sql, response_message_id: msgAssist,
             row_count: res.rowCount, duration_ms: Date.now() - debut, executed_at: new Date(),
         });
 
-        const vue = CATALOGUE[spec.view];
-        const libelles = Object.fromEntries(
-            Object.entries(vue?.colonnes ?? {}).map(([k, c]) => [k, c.libelle])
-        );
         return NextResponse.json({ conversationId: convId, texte, lignes: res.rows, libelles, sql });
 
     } catch (e) {
