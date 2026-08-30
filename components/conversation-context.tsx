@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState } from "react";
 import type { Confirmation } from "@/components/carte-action";
+import type { Brouillon } from "@/components/carte-import";
 
 type Message = {
     role: "user" | "assistant";
@@ -11,6 +12,7 @@ type Message = {
     choix?: string[];
     refus?: boolean;
     confirmation?: Confirmation;
+    brouillon?: Brouillon;
     heure: string;
 };
 
@@ -23,6 +25,7 @@ type ConversationState = {
     rafraichir: number;
     setInput: (v: string) => void;
     envoyer: (texte?: string) => Promise<void>;
+    importer: (fichier: File) => Promise<void>;
     nouvelleConversation: () => void;
     ouvrirConversation: (id: string) => Promise<void>;
 };
@@ -87,6 +90,54 @@ export function ConversationProvider({ children }: { children: React.ReactNode }
         }
     }
 
+    /** L'import ne passe pas par /api/chat : c'est un fichier, pas une question.
+     *  Le brouillon revient dans le fil comme une carte, au même titre qu'une
+     *  confirmation d'action. */
+    async function importer(fichier: File) {
+        if (enCours) return;
+        setEnCours(true);
+        setMessages((m) => [
+            ...m,
+            { role: "user", content: `Import de « ${fichier.name} »`, heure: maintenant() },
+        ]);
+
+        try {
+            const form = new FormData();
+            form.append("fichier", fichier);
+            const res = await fetch("/api/import", { method: "POST", body: form });
+            const data = await res.json();
+
+            if (res.ok && data.importId) {
+                setMessages((m) => [
+                    ...m,
+                    { role: "assistant", content: "", brouillon: data as Brouillon, heure: maintenant() },
+                ]);
+            } else {
+                setMessages((m) => [
+                    ...m,
+                    {
+                        role: "assistant",
+                        content: data.erreur ?? "L'import a échoué.",
+                        refus: true,
+                        heure: maintenant(),
+                    },
+                ]);
+            }
+        } catch (e) {
+            setMessages((m) => [
+                ...m,
+                {
+                    role: "assistant",
+                    content: `Connexion au serveur impossible : ${e instanceof Error ? e.message : String(e)}`,
+                    refus: true,
+                    heure: maintenant(),
+                },
+            ]);
+        } finally {
+            setEnCours(false);
+        }
+    }
+
     function nouvelleConversation() {
         setMessages([]);
         setConversationId(null);
@@ -119,7 +170,7 @@ export function ConversationProvider({ children }: { children: React.ReactNode }
         <ConversationContext.Provider
             value={{
                 conversationId, messages, setMessages, input, enCours, rafraichir,
-                setInput, envoyer, nouvelleConversation, ouvrirConversation,
+                setInput, envoyer, importer, nouvelleConversation, ouvrirConversation,
             }}
         >
             {children}

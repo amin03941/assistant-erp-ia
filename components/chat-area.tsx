@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
-import { Bell, Search, Sparkles, Plus, Send, FileUp, UserPlus, ClipboardPlus, Banknote } from "lucide-react";
+import { Bell, Search, Sparkles, Plus, Send, FileUp } from "lucide-react";
 import CarteAction, { type Confirmation } from "@/components/carte-action";
+import CarteImport, { type Brouillon } from "@/components/carte-import";
 import { useConversation } from "@/components/conversation-context";
 
 const ROLES: Record<string, string> = {
@@ -18,16 +19,11 @@ const SUGGESTIONS = [
     "Combien de clients avons-nous ?",
 ];
 
-const ACTIONS = [
-    { icone: FileUp, libelle: "Importer facture (OCR)" },
-    { icone: UserPlus, libelle: "Ajouter un client" },
-    { icone: ClipboardPlus, libelle: "Nouvelle commande" },
-    { icone: Banknote, libelle: "Enregistrer un paiement" },
-];
-
 export default function ChatArea({ nom, role }: { nom: string; role: string }) {
-    const { messages, setMessages, input, enCours, setInput, envoyer, nouvelleConversation } = useConversation();
+    const { messages, setMessages, input, enCours, setInput, envoyer, importer, nouvelleConversation } = useConversation();
     const basRef = useRef<HTMLDivElement>(null);
+    const fichierRef = useRef<HTMLInputElement>(null);
+    const [attenteImport, setAttenteImport] = useState(false);
 
     useEffect(() => {
         basRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -96,6 +92,24 @@ export default function ChatArea({ nom, role }: { nom: string; role: string }) {
                                     <p className="text-sm">{m.content}</p>
                                     <p className="mt-1 text-right text-[10px] text-[#6B7089]">{m.heure}</p>
                                 </div>
+                            </div>
+                        ) : m.brouillon ? (
+                            <div key={i} className="flex gap-3">
+                                <Image src="/logo.png" alt="" width={32} height={32} className="mt-1 h-8 w-8 shrink-0 rounded-lg" />
+                                <CarteImport
+                                    brouillon={m.brouillon as Brouillon}
+                                    onTermine={(texte, statut) => {
+                                        setMessages((prev) => [
+                                            ...prev,
+                                            {
+                                                role: "assistant",
+                                                content: texte,
+                                                refus: statut === "refus",
+                                                heure: new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
+                                            },
+                                        ]);
+                                    }}
+                                />
                             </div>
                         ) : m.confirmation ? (
                             <div key={i} className="flex gap-3">
@@ -179,7 +193,9 @@ export default function ChatArea({ nom, role }: { nom: string; role: string }) {
                         <div className="flex gap-3">
                             <Image src="/logo.png" alt="" width={32} height={32} className="mt-1 h-8 w-8 shrink-0 rounded-lg" />
                             <div className="rounded-2xl rounded-tl-sm border border-[#E8EAF2] bg-white px-4 py-3">
-                                <span className="text-sm text-[#6B7089]">Analyse en cours…</span>
+                                <span className="text-sm text-[#6B7089]">
+                                    {attenteImport ? "Lecture de la facture…" : "Analyse en cours…"}
+                                </span>
                             </div>
                         </div>
                     )}
@@ -213,18 +229,33 @@ export default function ChatArea({ nom, role }: { nom: string; role: string }) {
                     </div>
 
                     <div className="mt-3 flex flex-wrap gap-2">
-                        {ACTIONS.map(({ icone: Icone, libelle }) => (
-                            <button
-                                key={libelle}
-                                disabled
-                                title="Fonctionnalité à venir"
-                                className="flex cursor-not-allowed items-center gap-2 rounded-lg border border-[#E8EAF2] bg-white px-3 py-2 text-xs text-[#9AA0B8]"
-                            >
-                                <Icone size={14} />
-                                {libelle}
-                                <span className="rounded-full bg-[#F0F1F7] px-1.5 py-0.5 text-[9px]">à venir</span>
-                            </button>
-                        ))}
+                        <input
+                            ref={fichierRef}
+                            type="file"
+                            accept="image/png,image/jpeg"
+                            className="hidden"
+                            onChange={async (e) => {
+                                const f = e.target.files?.[0];
+                                e.target.value = "";   // permet de réimporter le même fichier
+                                if (!f) return;
+                                setAttenteImport(true);
+                                try {
+                                    await importer(f);
+                                } finally {
+                                    setAttenteImport(false);
+                                }
+                            }}
+                        />
+                        <button
+                            onClick={() => fichierRef.current?.click()}
+                            disabled={enCours}
+                            className="flex items-center gap-2 rounded-lg border border-[#E8EAF2] bg-white px-3 py-2
+                                       text-xs text-[#4A4F6B] transition hover:border-[#5B5BD6] hover:text-[#5B5BD6]
+                                       disabled:opacity-50"
+                        >
+                            <FileUp size={14} />
+                            Importer facture (OCR)
+                        </button>
                     </div>
 
                     <p className="mt-3 text-center text-[11px] text-[#9AA0B8]">

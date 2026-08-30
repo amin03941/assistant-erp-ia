@@ -364,7 +364,7 @@ const MOIS: Record<string, number> = {
     juillet: 7, aout: 8, septembre: 9, octobre: 10, novembre: 11, decembre: 12,
 };
 
-function lireDate(brut: string): string | null {
+export function lireDate(brut: string): string | null {
     const s = aplatir(brut);
     const jour = new Date();
 
@@ -407,7 +407,7 @@ function composer(an: number, mois: number, j: number): string | null {
     return d.toISOString().slice(0, 10);
 }
 
-function lireMontant(brut: unknown): number | null {
+export function lireMontant(brut: unknown): number | null {
     if (typeof brut === "number") return Number.isFinite(brut) ? arrondir(brut) : null;
 
     let s = String(brut).toLowerCase();

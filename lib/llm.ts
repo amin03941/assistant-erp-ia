@@ -130,7 +130,7 @@ export const SCHEMA_SPEC = {
     required: ["type"],
 } as const;
 
-async function ollama(prompt: string, schema: object | null, timeoutMs = 60000) {
+async function ollama(prompt: string, schema: object | null, timeoutMs = 60000, images?: string[]) {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), timeoutMs);
     try {
@@ -141,6 +141,7 @@ async function ollama(prompt: string, schema: object | null, timeoutMs = 60000) 
             body: JSON.stringify({
                 model: MODELE_LOCAL,
                 prompt,
+                ...(images?.length ? { images } : {}),
                 stream: false,
                 think: false,
                 keep_alive: "30m",
@@ -195,6 +196,13 @@ export async function appelerModele(prompt: string, schema: object | null) {
     } catch (e) {
         throw new ServiceIndisponible(`${erreurs.join(" | ")} | gemini: ${e}`);
     }
+}
+
+/** Appel vision : l'import de facture peut prendre du temps, et le raisonnement
+ *  aide à situer les champs dans une mise en page. Pas de cascade — Gemini
+ *  n'est pas sollicité ici. */
+export async function appelerModeleVision(prompt: string, schema: object | null, images: string[]) {
+    return await ollama(prompt, schema, 180000, images);
 }
 
 type Tour = { question: string; query_spec: any; row_count: number };
