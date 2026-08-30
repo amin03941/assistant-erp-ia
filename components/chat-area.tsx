@@ -3,6 +3,7 @@
 import { useRef, useEffect } from "react";
 import Image from "next/image";
 import { Bell, Search, Sparkles, Plus, Send, FileUp, UserPlus, ClipboardPlus, Banknote } from "lucide-react";
+import CarteAction, { type Confirmation } from "@/components/carte-action";
 import { useConversation } from "@/components/conversation-context";
 
 const ROLES: Record<string, string> = {
@@ -25,7 +26,7 @@ const ACTIONS = [
 ];
 
 export default function ChatArea({ nom, role }: { nom: string; role: string }) {
-    const { messages, input, enCours, setInput, envoyer, nouvelleConversation } = useConversation();
+    const { messages, setMessages, input, enCours, setInput, envoyer, nouvelleConversation } = useConversation();
     const basRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -96,6 +97,24 @@ export default function ChatArea({ nom, role }: { nom: string; role: string }) {
                                     <p className="mt-1 text-right text-[10px] text-[#6B7089]">{m.heure}</p>
                                 </div>
                             </div>
+                        ) : m.confirmation ? (
+                            <div key={i} className="flex gap-3">
+                                <Image src="/logo.png" alt="" width={32} height={32} className="mt-1 h-8 w-8 shrink-0 rounded-lg" />
+                                <CarteAction
+                                    confirmation={m.confirmation as Confirmation}
+                                    onTermine={(texte, statut) => {
+                                        setMessages((prev) => [
+                                            ...prev,
+                                            {
+                                                role: "assistant",
+                                                content: texte,
+                                                refus: statut === "refus",
+                                                heure: new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
+                                            },
+                                        ]);
+                                    }}
+                                />
+                            </div>
                         ) : (
                             <div key={i} className="flex gap-3">
                                 <Image src="/logo.png" alt="" width={32} height={32} className="mt-1 h-8 w-8 shrink-0 rounded-lg" />
@@ -108,6 +127,20 @@ export default function ChatArea({ nom, role }: { nom: string; role: string }) {
                                     <p className={`whitespace-pre-wrap text-sm ${m.refus ? "text-amber-900" : ""}`}>
                                         {m.content}
                                     </p>
+
+                                    {m.choix && m.choix.length > 0 && (
+                                        <div className="mt-3 flex flex-col gap-2">
+                                            {m.choix.map((c: string) => (
+                                                <button
+                                                    key={c}
+                                                    onClick={() => envoyer(c)}
+                                                    className="rounded-lg border border-slate-200 px-3 py-2 text-left text-sm hover:border-indigo-400 hover:bg-indigo-50 transition"
+                                                >
+                                                    {c}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
 
                                     {m.lignes && m.lignes.length > 0 && (
                                         <div className="mt-3 overflow-x-auto">

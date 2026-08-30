@@ -1,19 +1,23 @@
 "use client";
 
 import { createContext, useContext, useState } from "react";
+import type { Confirmation } from "@/components/carte-action";
 
 type Message = {
     role: "user" | "assistant";
     content: string;
     lignes?: any[];
     libelles?: Record<string, string>;
+    choix?: string[];
     refus?: boolean;
+    confirmation?: Confirmation;
     heure: string;
 };
 
 type ConversationState = {
     conversationId: string | null;
     messages: Message[];
+    setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
     input: string;
     enCours: boolean;
     rafraichir: number;
@@ -52,14 +56,24 @@ export function ConversationProvider({ children }: { children: React.ReactNode }
             const data = await res.json();
             if (data.conversationId) setConversationId(data.conversationId);
 
-            setMessages((m) => [...m, {
-                role: "assistant",
-                content: data.texte ?? data.erreur ?? "Réponse vide.",
-                lignes: data.lignes,
-                libelles: data.libelles,
-                refus: data.refus === true,
-                heure: maintenant(),
-            }]);
+            if (data.confirmation) {
+                setMessages((m) => [...m, {
+                    role: "assistant",
+                    content: "",
+                    confirmation: data.confirmation,
+                    heure: maintenant(),
+                }]);
+            } else {
+                setMessages((m) => [...m, {
+                    role: "assistant",
+                    content: data.texte ?? data.erreur ?? "Réponse vide.",
+                    lignes: data.lignes,
+                    libelles: data.libelles,
+                    choix: data.choix,
+                    refus: data.refus === true,
+                    heure: maintenant(),
+                }]);
+            }
         } catch (e) {
             setMessages((m) => [...m, {
                 role: "assistant",
@@ -104,7 +118,7 @@ export function ConversationProvider({ children }: { children: React.ReactNode }
     return (
         <ConversationContext.Provider
             value={{
-                conversationId, messages, input, enCours, rafraichir,
+                conversationId, messages, setMessages, input, enCours, rafraichir,
                 setInput, envoyer, nouvelleConversation, ouvrirConversation,
             }}
         >
