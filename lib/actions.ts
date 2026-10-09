@@ -260,6 +260,7 @@ export const ACTIONS: readonly Action[] = [
             "modifie le téléphone du client X",
             "change l'email de la société Y",
             "mets à jour l'adresse de X",
+            "archive le client X / change le statut du client X",
         ],
         operation: "modification",
         roles: ["MANAGER", "SALES"],

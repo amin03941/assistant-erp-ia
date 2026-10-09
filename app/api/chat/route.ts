@@ -7,7 +7,7 @@ import { getSession, type Session } from "@/lib/session";
 import * as conv from "@/lib/conversations";
 import { CATALOGUE } from "@/lib/catalogue";
 import { clarificationEnAttente, traiterEcriture } from "@/lib/ecriture";
-import { repriseExplicite, resoudreFiltres, reporterSujet, sujetsPrecedents } from "@/lib/entites";
+import { normaliserCodes, repriseExplicite, resoudreFiltres, reporterSujet, sujetsPrecedents } from "@/lib/entites";
 import { repondreConversation } from "@/lib/dialogue";
 import { appliquerPeriode } from "@/lib/periodes";
 import { donneesGraphique } from "@/lib/graphique";
@@ -105,6 +105,9 @@ async function traiter(
             // Période relative : le modèle l'a nommée, le code en calcule les dates.
             const periode = appliquerPeriode(spec);
             if (!periode.ok) return await refuser(periode.message, {}, spec);
+
+            // Valeurs codées écrites en français : « livrée » → DELIVERED.
+            spec.filters = normaliserCodes(spec.view, spec.filters ?? []);
 
             const reprise = spec.reprise === true || repriseExplicite(question);
             const report = reporterSujet(reprise, spec.view, spec.filters ?? [], sujetsPrecedents(tours));

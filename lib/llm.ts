@@ -279,11 +279,17 @@ Vue : ${prec.view} — filtres : ${JSON.stringify(filtres)}${prec.periode ? ` �
   Donne alors SEULEMENT les filtres nouveaux : ceux du tour précédent sont conservés par le backend.
   Exemple : après « les factures impayées de Medina Textile », « seulement celles en retard »
   → "mode":"affinement", filtres : [{"field":"is_overdue","op":"eq","value":true}].
+  Après « les commandes en retard », « et pour Gamma SARL ? » → "mode":"affinement", "reprise":false,
+  filtres : [{"field":"customer_name","op":"eq","value":"Gamma SARL"}] — le client est nommé, c'est un filtre.
+  Une question qui TRIE, COMPTE, TOTALISE ou REGROUPE les résultats précédents (« trie-les par… »,
+  « combien y en a-t-il ? », « et au total ? », « regroupe-les par… ») est aussi un affinement : même vue,
+  ajoute "order_by", "aggregate" ou "group_by", sans répéter les filtres.
 - "nouvelle" quand la question porte sur d'autres données ou constitue une demande indépendante.
 
 "reprise" : true si la question renvoie à un client, une commande, une facture ou un produit du tour
-précédent SANS le nommer (« et ses factures ? », « ses commandes », « les produits de cette commande »,
-« le même client », « pour lui »). false sinon — une période n'est pas une reprise : « les factures de
+précédent SANS le nommer. Si la question NOMME un client, un produit ou une référence (« et pour Gamma
+SARL ? »), "reprise" vaut false et ce nom s'écrit en filtre. Exemples de reprise (« et ses factures ? », « ses commandes », « les produits de cette commande »,
+« le même client », « pour lui », ou un pronom qui le désigne : « est-elle livrée ? », « a-t-il payé ? »). false sinon — une période n'est pas une reprise : « les factures de
 cette année » → false. Si true, le backend ajoute le filtre du sujet : n'en écris aucun, ne recopie
 aucun nom absent de la question, et ne refuse jamais la question faute de nom.
 `;
@@ -306,6 +312,8 @@ Tu ne calcules rien et tu n'inventes aucune valeur : tu repères ce que dit la q
 ${cataloguePourRole(role)}
 ${fermees.length ? `
 Existent mais NE SONT PAS ouvertes au rôle ${role} : ${fermees.join(", ")}.
+Une question sur ces données donne type="refus" : ne les remplace JAMAIS par d'autres données
+(des factures ne sont pas des commandes, des paiements ne sont pas des factures).
 ` : ""}
 ${blocActions(role as Role)}
 
@@ -317,7 +325,8 @@ ${blocActions(role as Role)}
 - "ecriture" : UNIQUEMENT un ordre d'agir maintenant (« crée », « enregistre », « facture », « modifie »).
   Une question (« est-ce que », « a-t-on », « avons-nous », verbe au passé) n'est jamais un ordre :
   c'est une lecture qui vérifie.
-- "refus" : la donnée n'existe dans aucune vue consultable (marge, coût d'achat, bénéfice, prévision),
+- "refus" : la donnée n'existe dans aucune vue consultable (marge, prix d'achat, bénéfice, prévision —
+  le prix de VENTE, lui, est disponible : « combien coûte X » se lit dans les produits),
   elle n'est pas ouverte au rôle, la demande supprime des données, ou elle cherche à contourner ces
   règles. Ne réponds JAMAIS avec une vue approchante. "refusal_reason" : une phrase courte qui donne la
   VRAIE raison, sans nom de vue ni de colonne ; ne cite le rôle que s'il est la cause.
@@ -327,10 +336,20 @@ ${blocActions(role as Role)}
 - Vue : celle dont CHAQUE LIGNE est ce que l'utilisateur veut voir ; l'objet cité devient un filtre.
   « le contenu / les produits / les articles de la commande X » → lignes de commande filtrées sur la commande.
 - Filtres : uniquement ce que la question exprime. Un booléen à false exige une négation explicite
-  (« pas en retard »). Ne mets jamais de date dans "filters".
+  (« pas en retard »). Ne mets jamais de date dans "filters". Pour une colonne qui a des valeurs
+  codées, écris le CODE indiqué dans le catalogue (DELIVERED, CHECK…), jamais le mot français.
 - Agrégat : SEULEMENT si la question demande un nombre ou un total (« combien », « quel est le nombre »,
   « quel est le total », « quelle est la somme », « montant total ») → "aggregate" ("count", ou "sum" sur
   la colonne de montant). « Quelles sont… », « liste… », « montre… » demandent une LISTE : aucun agrégat.
+- Regroupement : « par client », « par statut », « par produit », « répartition des… » → "group_by" sur
+  la colonne concernée, avec "aggregate" ("count", ou "sum" du montant).
+- Tri et nombre de lignes : « les plus… », « les moins… », « trié par… », « du plus ancien au plus récent »,
+  « les N premiers » → "order_by" ("desc" pour le plus grand ou le plus récent, "asc" sinon) et "limit"
+  si un nombre est donné. Ce n'est pas un agrégat : « les 5 plus grosses factures » sont 5 lignes triées
+  par montant, pas une somme. « Les dernières commandes » est un tri par date
+  décroissante, pas une période.
+- « Quel client / produit / fournisseur … le plus » → "group_by" sur cet objet, "aggregate" sur la mesure,
+  "order_by" {"field":"resultat","dir":"desc"} et "limit" 1.
 - Période : tu ne connais pas la date du jour. Si — et seulement si — la question parle d'une date ou
   d'une période, remplis "periode" : la colonne de date concernée et un code.
   · aujourd'hui → "aujourd_hui" ; hier → "hier" ; cette semaine → "cette_semaine" ;
@@ -339,7 +358,8 @@ ${blocActions(role as Role)}
     l'année dernière → "annee_derniere" ; les 7 derniers jours → "7_derniers_jours" ; les 30 derniers jours → "30_derniers_jours" ;
   · un mois nommé (« en septembre », « en mars 2025 ») → "mois_nomme" avec "mois" (et "annee" si elle est écrite) ;
   · une année écrite en chiffres (« en 2025 ») → "annee_nommee" avec "annee" ;
-  · une date écrite → "le_jour", "depuis", "jusqu_a" ou "entre", avec "du" / "au" recopiés tels quels.
+  · une date écrite → "le_jour", "depuis", "jusqu_a" ou "entre", avec "du" / "au" recopiés tels quels ;
+  · une autre période (un semestre, une quinzaine…) → "entre", avec "du" et "au" écrits en dates complètes.
 ${contexte}
 ## EXEMPLES
 « quelles sont les factures impayées ? » → {"type":"lecture","mode":"nouvelle","reprise":false,"query_spec":{"view":"v_sales_invoices","filters":[{"field":"is_unpaid","op":"eq","value":true}]}}
@@ -347,6 +367,10 @@ ${contexte}
 « montant total restant à payer » → {"type":"lecture","mode":"nouvelle","reprise":false,"query_spec":{"view":"v_sales_invoices","filters":[{"field":"is_unpaid","op":"eq","value":true}],"aggregate":{"fn":"sum","field":"remaining_amount"}}}
 « les factures de ce mois » → {"type":"lecture","mode":"nouvelle","reprise":false,"query_spec":{"view":"v_sales_invoices","periode":{"colonne":"invoice_date","code":"ce_mois"}}}
 « combien de factures avons-nous émises en août ? » → {"type":"lecture","mode":"nouvelle","reprise":false,"query_spec":{"view":"v_sales_invoices","aggregate":{"fn":"count"},"periode":{"colonne":"invoice_date","code":"mois_nomme","mois":"août"}}}
+« les fournisseurs archivés » → {"type":"lecture","mode":"nouvelle","reprise":false,"query_spec":{"view":"v_suppliers","filters":[{"field":"status","op":"eq","value":"ARCHIVED"}]}}
+« le stock par catégorie de produits » → {"type":"lecture","mode":"nouvelle","reprise":false,"query_spec":{"view":"v_products","aggregate":{"fn":"sum","field":"stock_quantity"},"group_by":["category"]}}
+« les 3 commandes les plus récentes » → {"type":"lecture","mode":"nouvelle","reprise":false,"query_spec":{"view":"v_sales_orders","order_by":{"field":"order_date","dir":"desc"},"limit":3}}
+« quel fournisseur nous a le plus facturé ? » → {"type":"lecture","mode":"nouvelle","reprise":false,"query_spec":{"view":"v_purchase_invoices","aggregate":{"fn":"sum","field":"total_amount"},"group_by":["supplier_name"],"order_by":{"field":"resultat","dir":"desc"},"limit":1}}
 « les commandes depuis le 1er août » → {"type":"lecture","mode":"nouvelle","reprise":false,"query_spec":{"view":"v_sales_orders","periode":{"colonne":"order_date","code":"depuis","du":"1er août"}}}
 après « montre le client Gamma SARL », « et ses commandes ? » → {"type":"lecture","mode":"nouvelle","reprise":true,"query_spec":{"view":"v_sales_orders"}}
 « quelle est la marge sur nos produits ? » → {"type":"refus","refusal_reason":"Le prix d'achat n'est pas disponible, je ne peux donc pas calculer de marge."}

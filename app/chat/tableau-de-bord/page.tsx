@@ -170,7 +170,7 @@ function Contenu({ t }: { t: TableauDeBord }) {
 
             <Carte
                 titre="Évaluation de la compréhension"
-                sousTitre="Le jeu indépendant, figé avant toute exécution, mesure ; le jeu de référence a servi à la mise au point. Rapports dans eval/resultats."
+                sousTitre="La validation n° 2, figée avant les dernières corrections, est la mesure honnête ; l'indépendant n° 1 a servi au diagnostic, la référence à la mise au point. Rapports dans eval/resultats."
             >
                 {t.evaluations.length === 0
                     ? <p className="text-xs text-[#9AA0B8]">Aucun rapport d&apos;évaluation.</p>

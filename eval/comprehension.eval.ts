@@ -127,6 +127,7 @@ async function comprendre(cas: Cas) {
             if (!p.ok) return { spec: { type: "refus", ok: false, raison: p.message }, ms };
         }
         const e = entites as Record<string, any>;
+        if (typeof e.normaliserCodes === "function") spec.filters = e.normaliserCodes(spec.view, spec.filters ?? []);
         const sujets = e.sujetsPrecedents(tours);
         spec.filters = typeof e.repriseExplicite === "function"
             ? e.reporterSujet(spec.reprise === true || e.repriseExplicite(cas.question), spec.view, spec.filters ?? [], sujets).filtres

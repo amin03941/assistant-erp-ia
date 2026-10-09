@@ -1,20 +1,21 @@
 {
-  "date": "2026-10-09T16:06:27.824Z",
+  "date": "2026-10-09T18:25:18.589Z",
   "sessions": [
-    "2026-10-09T16:06:27.824Z"
+    "2026-10-09T18:25:18.589Z"
   ],
+  "jeu": "reference",
   "modele": "qwen3.5:9b",
-  "commit": "d60aaf0",
+  "commit": "7e61928",
   "complet": true,
   "score": {
-    "reussis": 64,
+    "reussis": 63,
     "total": 64,
-    "taux": 100
+    "taux": 98.4
   },
   "erreurs_api": [],
   "latence_ms": {
-    "mediane": 1399,
-    "p90": 1729
+    "mediane": 1216,
+    "p90": 2607
   },
   "familles": {
     "factures impayées": {
@@ -50,7 +51,7 @@
       "total": 4
     },
     "contenu d'une commande": {
-      "reussis": 4,
+      "reussis": 3,
       "total": 4
     },
     "reprise": {
@@ -110,327 +111,357 @@
       "total": 2
     }
   },
-  "echecs": [],
+  "echecs": [
+    {
+      "id": "contenu-commande-3",
+      "question": "c'est quoi le contenu de cette commande",
+      "ecarts": [
+        "vue v_sales_orders au lieu de v_sales_order_items",
+        "filtre manquant : order_reference",
+        "filtre en trop : reference = \"CMD-2026-0031\"",
+        "filtre en trop : customer_reference = \"CLI-007\""
+      ],
+      "compris": {
+        "view": "v_sales_orders",
+        "filters": [
+          {
+            "field": "reference",
+            "op": "eq",
+            "value": "CMD-2026-0031"
+          },
+          {
+            "field": "customer_reference",
+            "op": "eq",
+            "value": "CLI-007"
+          }
+        ],
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false
+      }
+    }
+  ],
   "cas": [
     {
       "id": "impayees-1",
       "ok": true,
-      "ms": 2606
+      "ms": 2886
     },
     {
       "id": "impayees-2",
       "ok": true,
-      "ms": 1418
+      "ms": 1235
     },
     {
       "id": "impayees-3",
       "ok": true,
-      "ms": 1419
+      "ms": 1200
     },
     {
       "id": "impayees-4",
       "ok": true,
-      "ms": 1414
+      "ms": 1216
     },
     {
       "id": "impayees-5",
       "ok": true,
-      "ms": 1408
+      "ms": 1201
     },
     {
       "id": "nb-clients-1",
       "ok": true,
-      "ms": 1152
+      "ms": 998
     },
     {
       "id": "nb-clients-2",
       "ok": true,
-      "ms": 1160
+      "ms": 1022
     },
     {
       "id": "nb-clients-3",
       "ok": true,
-      "ms": 1160
+      "ms": 988
     },
     {
       "id": "nb-clients-4",
       "ok": true,
-      "ms": 1156
+      "ms": 997
     },
     {
       "id": "reste-total-1",
       "ok": true,
-      "ms": 1683
+      "ms": 1436
     },
     {
       "id": "reste-total-2",
       "ok": true,
-      "ms": 1686
+      "ms": 1423
     },
     {
       "id": "reste-total-3",
       "ok": true,
-      "ms": 1664
+      "ms": 1437
     },
     {
       "id": "reste-total-4",
       "ok": true,
-      "ms": 1695
+      "ms": 1452
     },
     {
       "id": "cmd-retard-1",
       "ok": true,
-      "ms": 1409
+      "ms": 1230
     },
     {
       "id": "cmd-retard-2",
       "ok": true,
-      "ms": 1397
+      "ms": 1200
     },
     {
       "id": "cmd-retard-3",
       "ok": true,
-      "ms": 1399
+      "ms": 1461
     },
     {
       "id": "impayees-client-1",
       "ok": true,
-      "ms": 1798
+      "ms": 1555
     },
     {
       "id": "impayees-client-2",
       "ok": true,
-      "ms": 1773
+      "ms": 1500
     },
     {
       "id": "impayees-client-3",
       "ok": true,
-      "ms": 1743
+      "ms": 1481
     },
     {
       "id": "factures-retard",
       "ok": true,
-      "ms": 1411
+      "ms": 1207
     },
     {
       "id": "produits-stock",
       "ok": true,
-      "ms": 1382
+      "ms": 1171
     },
     {
       "id": "affinement-retard-1",
       "ok": true,
-      "ms": 1598
+      "ms": 2926
     },
     {
       "id": "affinement-retard-2",
       "ok": true,
-      "ms": 1445
+      "ms": 1228
     },
     {
       "id": "affinement-retard-3",
       "ok": true,
-      "ms": 1434
+      "ms": 1254
     },
     {
       "id": "affinement-client",
       "ok": true,
-      "ms": 1619
+      "ms": 2916
     },
     {
       "id": "contenu-commande-1",
       "ok": true,
-      "ms": 1219
+      "ms": 2579
     },
     {
       "id": "contenu-commande-2",
       "ok": true,
-      "ms": 1040
+      "ms": 906
     },
     {
       "id": "contenu-commande-3",
-      "ok": true,
-      "ms": 1040
+      "ok": false,
+      "ms": 1404
     },
     {
       "id": "contenu-commande-4",
       "ok": true,
-      "ms": 1673
+      "ms": 1439
     },
     {
       "id": "reprise-ses-factures",
       "ok": true,
-      "ms": 1220
+      "ms": 2569
     },
     {
       "id": "reprise-ses-commandes",
       "ok": true,
-      "ms": 985
+      "ms": 879
     },
     {
       "id": "periode-ce-mois",
       "ok": true,
-      "ms": 1332
+      "ms": 2607
     },
     {
       "id": "periode-mois-dernier",
       "ok": true,
-      "ms": 1353
+      "ms": 1204
     },
     {
       "id": "periode-mois-nomme",
       "ok": true,
-      "ms": 1454
+      "ms": 1276
     },
     {
       "id": "periode-comptage",
       "ok": true,
-      "ms": 1481
+      "ms": 1275
     },
     {
       "id": "periode-comptage-2",
       "ok": true,
-      "ms": 1524
+      "ms": 1323
     },
     {
       "id": "periode-echeance",
       "ok": true,
-      "ms": 1426
+      "ms": 1217
     },
     {
       "id": "pas-de-reprise",
       "ok": true,
-      "ms": 1583
+      "ms": 2877
     },
     {
       "id": "reprise-et-periode",
       "ok": true,
-      "ms": 1413
+      "ms": 1188
     },
     {
       "id": "ca-mensuel",
       "ok": true,
-      "ms": 1053
+      "ms": 2325
     },
     {
       "id": "ca-mensuel-annee",
       "ok": true,
-      "ms": 1401
+      "ms": 1182
     },
     {
       "id": "achats-importees",
       "ok": true,
-      "ms": 1385
+      "ms": 1189
     },
     {
       "id": "achats-liste",
       "ok": true,
-      "ms": 997
+      "ms": 846
     },
     {
       "id": "ecr-client-1",
       "ok": true,
-      "ms": 797
+      "ms": 712
     },
     {
       "id": "ecr-client-2",
       "ok": true,
-      "ms": 798
+      "ms": 718
     },
     {
       "id": "ecr-paiement-1",
       "ok": true,
-      "ms": 830
+      "ms": 749
     },
     {
       "id": "ecr-paiement-2",
       "ok": true,
-      "ms": 818
+      "ms": 723
     },
     {
       "id": "ecr-facturer",
       "ok": true,
-      "ms": 863
+      "ms": 767
     },
     {
       "id": "ecr-modifier",
       "ok": true,
-      "ms": 800
+      "ms": 729
     },
     {
       "id": "passe-commande",
       "ok": true,
-      "ms": 1996
+      "ms": 3115
     },
     {
       "id": "passe-paiement",
       "ok": true,
-      "ms": 1441
+      "ms": 2887
     },
     {
       "id": "passe-client",
       "ok": true,
-      "ms": 1389
+      "ms": 1186
     },
     {
       "id": "conv-bonjour",
       "ok": true,
-      "ms": 1005
+      "ms": 860
     },
     {
       "id": "conv-salut",
       "ok": true,
-      "ms": 1180
+      "ms": 1019
     },
     {
       "id": "conv-merci",
       "ok": true,
-      "ms": 1108
+      "ms": 973
     },
     {
       "id": "conv-aide",
       "ok": true,
-      "ms": 1785
+      "ms": 1470
     },
     {
       "id": "conv-aide-2",
       "ok": true,
-      "ms": 1440
+      "ms": 1453
     },
     {
       "id": "refus-marge",
       "ok": true,
-      "ms": 1162
+      "ms": 992
     },
     {
       "id": "refus-benefice",
       "ok": true,
-      "ms": 1160
+      "ms": 1115
     },
     {
       "id": "refus-suppression",
       "ok": true,
-      "ms": 1077
+      "ms": 937
     },
     {
       "id": "refus-injection-1",
       "ok": true,
-      "ms": 1729
+      "ms": 1304
     },
     {
       "id": "refus-injection-2",
       "ok": true,
-      "ms": 1154
+      "ms": 994
     },
     {
       "id": "refus-role-lecture",
       "ok": true,
-      "ms": 1194
+      "ms": 1071
     },
     {
       "id": "refus-role-ecriture",
       "ok": true,
-      "ms": 1087
+      "ms": 955
     }
   ]
 }

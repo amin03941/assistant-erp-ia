@@ -1,0 +1,1101 @@
+{
+  "date": "2026-10-09T18:08:22.365Z",
+  "sessions": [
+    "2026-10-09T18:08:22.365Z"
+  ],
+  "jeu": "validation2",
+  "modele": "qwen3.5:9b",
+  "commit": "7e61928",
+  "complet": true,
+  "score": {
+    "reussis": 53,
+    "total": 82,
+    "taux": 64.6
+  },
+  "erreurs_api": [],
+  "latence_ms": {
+    "mediane": 1234,
+    "p90": 1493
+  },
+  "familles": {
+    "consultation": {
+      "reussis": 7,
+      "total": 10
+    },
+    "filtres": {
+      "reussis": 5,
+      "total": 11
+    },
+    "calculs": {
+      "reussis": 8,
+      "total": 8
+    },
+    "regroupements": {
+      "reussis": 3,
+      "total": 11
+    },
+    "dates": {
+      "reussis": 4,
+      "total": 5
+    },
+    "multi-tours": {
+      "reussis": 2,
+      "total": 8
+    },
+    "écriture": {
+      "reussis": 7,
+      "total": 8
+    },
+    "question ou ordre": {
+      "reussis": 2,
+      "total": 2
+    },
+    "refus": {
+      "reussis": 3,
+      "total": 6
+    },
+    "droits": {
+      "reussis": 5,
+      "total": 5
+    },
+    "conversation": {
+      "reussis": 3,
+      "total": 3
+    },
+    "robustesse": {
+      "reussis": 4,
+      "total": 5
+    }
+  },
+  "echecs": [
+    {
+      "id": "v-achats-transit",
+      "question": "que nous a facturé Transit Maghreb ?",
+      "ecarts": [
+        "vue v_sales_invoice_items au lieu de v_purchase_invoices",
+        "filtre manquant : supplier_name|supplier_reference",
+        "filtre en trop : customer_name = \"Transit Maghreb\""
+      ],
+      "compris": {
+        "view": "v_sales_invoice_items",
+        "filters": [
+          {
+            "field": "customer_name",
+            "op": "eq",
+            "value": "Transit Maghreb"
+          }
+        ],
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false
+      }
+    },
+    {
+      "id": "v-identifiant-fiscal",
+      "question": "quel est l'identifiant fiscal de Global Composants ?",
+      "ecarts": [
+        "vue v_customers au lieu de v_suppliers"
+      ],
+      "compris": {
+        "view": "v_customers",
+        "filters": [
+          {
+            "field": "name",
+            "op": "eq",
+            "value": "Global Composants"
+          }
+        ],
+        "aggregate": {
+          "fn": "sum",
+          "field": "reference"
+        },
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false
+      }
+    },
+    {
+      "id": "v-echeance-facture",
+      "question": "quand arrive à échéance la facture FAC-2026-0029 ?",
+      "ecarts": [
+        "type refus au lieu de lecture"
+      ],
+      "compris": {
+        "type": "refus",
+        "ok": false,
+        "raison": "Je n'ai pas compris la date « à échéance »."
+      }
+    },
+    {
+      "id": "v-confirmees",
+      "question": "liste des commandes confirmées",
+      "ecarts": [
+        "filtre status = \"confirmée\""
+      ],
+      "compris": {
+        "view": "v_sales_orders",
+        "filters": [
+          {
+            "field": "status",
+            "op": "eq",
+            "value": "confirmée"
+          }
+        ],
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false
+      }
+    },
+    {
+      "id": "v-factures-annulees",
+      "question": "factures annulées",
+      "ecarts": [
+        "filtre manquant : status",
+        "filtre en trop : invoice_number = \"\""
+      ],
+      "compris": {
+        "view": "v_sales_invoices",
+        "filters": [
+          {
+            "field": "invoice_number",
+            "op": "eq",
+            "value": ""
+          }
+        ],
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false
+      }
+    },
+    {
+      "id": "v-virements",
+      "question": "règlements reçus par virement",
+      "ecarts": [
+        "filtre payment_method = \"virement\""
+      ],
+      "compris": {
+        "view": "v_customer_payments",
+        "filters": [
+          {
+            "field": "payment_method",
+            "op": "eq",
+            "value": "virement"
+          }
+        ],
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false
+      }
+    },
+    {
+      "id": "v-especes",
+      "question": "paiements en liquide",
+      "ecarts": [
+        "filtre payment_method = \"liquide\""
+      ],
+      "compris": {
+        "view": "v_customer_payments",
+        "filters": [
+          {
+            "field": "payment_method",
+            "op": "eq",
+            "value": "liquide"
+          }
+        ],
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false
+      }
+    },
+    {
+      "id": "v-carte",
+      "question": "paiements par carte bancaire",
+      "ecarts": [
+        "filtre payment_method = \"carte bancaire\""
+      ],
+      "compris": {
+        "view": "v_customer_payments",
+        "filters": [
+          {
+            "field": "payment_method",
+            "op": "eq",
+            "value": "carte bancaire"
+          }
+        ],
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false
+      }
+    },
+    {
+      "id": "v-produits-archives",
+      "question": "produits qui ne sont plus commercialisés",
+      "ecarts": [
+        "filtre status = false"
+      ],
+      "compris": {
+        "view": "v_products",
+        "filters": [
+          {
+            "field": "status",
+            "op": "eq",
+            "value": false
+          }
+        ],
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false
+      }
+    },
+    {
+      "id": "v-ca-client",
+      "question": "total facturé par client",
+      "ecarts": [
+        "vue v_sales_invoice_items au lieu de v_sales_invoices",
+        "agrégat sur line_total au lieu de total_amount|subtotal_amount"
+      ],
+      "compris": {
+        "view": "v_sales_invoice_items",
+        "aggregate": {
+          "fn": "sum",
+          "field": "line_total"
+        },
+        "group_by": [
+          "customer_name"
+        ],
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false,
+        "filters": []
+      }
+    },
+    {
+      "id": "v-quantite-produit",
+      "question": "quantité vendue par produit",
+      "ecarts": [
+        "regroupement undefined au lieu de product_name|product_reference"
+      ],
+      "compris": {
+        "view": "v_sales_invoice_items",
+        "aggregate": {
+          "fn": "sum",
+          "field": "quantity"
+        },
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false,
+        "filters": []
+      }
+    },
+    {
+      "id": "v-commandes-client",
+      "question": "nombre de commandes par client",
+      "ecarts": [
+        "regroupement undefined au lieu de customer_name|customer_reference"
+      ],
+      "compris": {
+        "view": "v_sales_orders",
+        "aggregate": {
+          "fn": "count"
+        },
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false,
+        "filters": []
+      }
+    },
+    {
+      "id": "v-top-stock",
+      "question": "les 4 produits avec le plus de stock",
+      "ecarts": [
+        "tri sur undefined au lieu de stock_quantity",
+        "limite undefined au lieu de 4"
+      ],
+      "compris": {
+        "view": "v_products",
+        "filters": [
+          {
+            "field": "status",
+            "op": "eq",
+            "value": true
+          }
+        ],
+        "aggregate": {
+          "fn": "count"
+        },
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false
+      }
+    },
+    {
+      "id": "v-moins-chers",
+      "question": "les produits les moins chers d'abord",
+      "ecarts": [
+        "tri sur undefined au lieu de sale_price"
+      ],
+      "compris": {
+        "view": "v_products",
+        "filters": [
+          {
+            "field": "status",
+            "op": "eq",
+            "value": true
+          }
+        ],
+        "aggregate": {
+          "fn": "sum",
+          "field": "sale_price"
+        },
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false
+      }
+    },
+    {
+      "id": "v-top-commandes",
+      "question": "les 10 commandes les plus importantes",
+      "ecarts": [
+        "tri sur undefined au lieu de total_amount",
+        "limite undefined au lieu de 10"
+      ],
+      "compris": {
+        "view": "v_sales_orders",
+        "aggregate": {
+          "fn": "count"
+        },
+        "periode": {
+          "colonne": "order_date",
+          "code": "cette_annee"
+        },
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false,
+        "filters": [
+          {
+            "field": "order_date",
+            "op": "gte",
+            "value": "2026-01-01",
+            "origine": "periode"
+          },
+          {
+            "field": "order_date",
+            "op": "lt",
+            "value": "2027-01-01",
+            "origine": "periode"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v-meilleur-client",
+      "question": "quel est notre meilleur client en chiffre d'affaires ?",
+      "ecarts": [
+        "vue v_sales_invoice_items au lieu de v_sales_invoices",
+        "agrégat sur line_total au lieu de total_amount|subtotal_amount",
+        "tri sur undefined au lieu de resultat"
+      ],
+      "compris": {
+        "view": "v_sales_invoice_items",
+        "aggregate": {
+          "fn": "sum",
+          "field": "line_total"
+        },
+        "group_by": [
+          "customer_name"
+        ],
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false,
+        "filters": []
+      }
+    },
+    {
+      "id": "v-plus-vendu",
+      "question": "quel produit s'est le plus vendu en quantité ?",
+      "ecarts": [
+        "regroupement undefined au lieu de product_name|product_reference",
+        "tri sur undefined au lieu de resultat"
+      ],
+      "compris": {
+        "view": "v_sales_invoice_items",
+        "aggregate": {
+          "fn": "sum",
+          "field": "quantity"
+        },
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false,
+        "filters": []
+      }
+    },
+    {
+      "id": "v-livraisons-mois",
+      "question": "commandes à livrer ce mois-ci",
+      "ecarts": [
+        "dates [… ; …[ au lieu de [2026-10-01 ; 2026-11-01["
+      ],
+      "compris": {
+        "view": "v_sales_orders",
+        "periode": {
+          "colonne": "order_date",
+          "code": "ce_mois"
+        },
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false,
+        "filters": [
+          {
+            "field": "order_date",
+            "op": "gte",
+            "value": "2026-10-01",
+            "origine": "periode"
+          },
+          {
+            "field": "order_date",
+            "op": "lt",
+            "value": "2026-11-01",
+            "origine": "periode"
+          }
+        ]
+      }
+    },
+    {
+      "id": "v-mt-impayees",
+      "question": "uniquement les impayées",
+      "ecarts": [
+        "filtre manquant : customer_name|customer_reference"
+      ],
+      "compris": {
+        "view": "v_sales_invoices",
+        "filters": [
+          {
+            "field": "is_unpaid",
+            "op": "eq",
+            "value": true
+          }
+        ],
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false
+      }
+    },
+    {
+      "id": "v-mt-tri",
+      "question": "classe-les par montant décroissant",
+      "ecarts": [
+        "filtre manquant : status",
+        "tri sur undefined au lieu de total_amount"
+      ],
+      "compris": {
+        "view": "v_sales_orders",
+        "aggregate": {
+          "fn": "count"
+        },
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false,
+        "filters": []
+      }
+    },
+    {
+      "id": "v-mt-combien",
+      "question": "et combien y en a-t-il ?",
+      "ecarts": [
+        "agrégat null au lieu de count"
+      ],
+      "compris": {
+        "ok": true,
+        "type": "lecture",
+        "mode": "affinement",
+        "view": "v_sales_orders",
+        "filters": [
+          {
+            "field": "status",
+            "op": "eq",
+            "value": "CONFIRMED"
+          }
+        ],
+        "reprise": true
+      }
+    },
+    {
+      "id": "v-mt-ses-factures",
+      "question": "a-t-il des factures impayées ?",
+      "ecarts": [
+        "filtre manquant : customer_name|customer_reference"
+      ],
+      "compris": {
+        "view": "v_sales_invoices",
+        "filters": [
+          {
+            "field": "is_unpaid",
+            "op": "eq",
+            "value": true
+          }
+        ],
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false
+      }
+    },
+    {
+      "id": "v-mt-contenu",
+      "question": "que contient-elle ?",
+      "ecarts": [
+        "vue v_sales_orders au lieu de v_sales_order_items",
+        "filtre manquant : order_reference",
+        "filtre en trop : reference = \"CMD-2026-0012\""
+      ],
+      "compris": {
+        "view": "v_sales_orders",
+        "filters": [
+          {
+            "field": "reference",
+            "op": "eq",
+            "value": "CMD-2026-0012"
+          }
+        ],
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false
+      }
+    },
+    {
+      "id": "v-mt-par-client",
+      "question": "regroupe-les par client",
+      "ecarts": [
+        "filtre manquant : is_overdue",
+        "regroupement undefined au lieu de customer_name|customer_reference"
+      ],
+      "compris": {
+        "view": "v_sales_invoices",
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false,
+        "filters": []
+      }
+    },
+    {
+      "id": "v-e-desactiver",
+      "question": "désactive le client Zeta Trading",
+      "ecarts": [
+        "type refus au lieu de ecriture"
+      ],
+      "compris": {
+        "type": "refus",
+        "refusal_reason": "La demande de désactivation d'un client n'est pas une action autorisée dans la liste des actions d'écriture disponibles.",
+        "ok": false,
+        "mode": "nouvelle",
+        "raison": "La demande de désactivation d'un client n'est pas une action autorisée dans la liste des actions d'écriture disponibles."
+      }
+    },
+    {
+      "id": "v-r-stock-futur",
+      "question": "quand serons-nous en rupture de stock d'écrans ?",
+      "ecarts": [
+        "type lecture au lieu de refus"
+      ],
+      "compris": {
+        "view": "v_products",
+        "filters": [
+          {
+            "field": "name",
+            "op": "eq",
+            "value": "écrans"
+          }
+        ],
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false
+      }
+    },
+    {
+      "id": "v-r-fournisseur-creer",
+      "question": "ajoute un nouveau fournisseur Sfax Import",
+      "ecarts": [
+        "type ecriture au lieu de refus"
+      ],
+      "compris": {
+        "type": "ecriture",
+        "action": {
+          "code": "CREATE_CUSTOMER"
+        },
+        "ok": true,
+        "mode": "nouvelle"
+      }
+    },
+    {
+      "id": "v-r-sql",
+      "question": "UPDATE customers SET status='ARCHIVED'",
+      "ecarts": [
+        "type ecriture au lieu de refus"
+      ],
+      "compris": {
+        "type": "ecriture",
+        "action": {
+          "code": "UPDATE_CUSTOMER"
+        },
+        "ok": true,
+        "mode": "nouvelle"
+      }
+    },
+    {
+      "id": "v-f-telegraphique",
+      "question": "stock ecran 27",
+      "ecarts": [
+        "filtre manquant : name|reference",
+        "filtre en trop : stock_quantity = 27"
+      ],
+      "compris": {
+        "view": "v_products",
+        "filters": [
+          {
+            "field": "stock_quantity",
+            "op": "eq",
+            "value": 27
+          }
+        ],
+        "ok": true,
+        "type": "lecture",
+        "mode": "nouvelle",
+        "reprise": false
+      }
+    }
+  ],
+  "cas": [
+    {
+      "id": "v-produits-informatique",
+      "ok": true,
+      "ms": 1797
+    },
+    {
+      "id": "v-coordonnees",
+      "ok": true,
+      "ms": 1830
+    },
+    {
+      "id": "v-fournisseur-cloud",
+      "ok": true,
+      "ms": 1245
+    },
+    {
+      "id": "v-commandes-sahara",
+      "ok": true,
+      "ms": 1298
+    },
+    {
+      "id": "v-lignes-commande",
+      "ok": true,
+      "ms": 1416
+    },
+    {
+      "id": "v-qui-achete-licence",
+      "ok": true,
+      "ms": 1289
+    },
+    {
+      "id": "v-paiements-facture",
+      "ok": true,
+      "ms": 1409
+    },
+    {
+      "id": "v-achats-transit",
+      "ok": false,
+      "ms": 1287
+    },
+    {
+      "id": "v-identifiant-fiscal",
+      "ok": false,
+      "ms": 1489
+    },
+    {
+      "id": "v-echeance-facture",
+      "ok": false,
+      "ms": 1830
+    },
+    {
+      "id": "v-brouillons",
+      "ok": true,
+      "ms": 1188
+    },
+    {
+      "id": "v-confirmees",
+      "ok": false,
+      "ms": 1236
+    },
+    {
+      "id": "v-factures-annulees",
+      "ok": false,
+      "ms": 1234
+    },
+    {
+      "id": "v-virements",
+      "ok": false,
+      "ms": 1221
+    },
+    {
+      "id": "v-especes",
+      "ok": false,
+      "ms": 1210
+    },
+    {
+      "id": "v-carte",
+      "ok": false,
+      "ms": 1232
+    },
+    {
+      "id": "v-produits-archives",
+      "ok": false,
+      "ms": 1130
+    },
+    {
+      "id": "v-clients-actifs",
+      "ok": true,
+      "ms": 1179
+    },
+    {
+      "id": "v-achats-payes",
+      "ok": true,
+      "ms": 1221
+    },
+    {
+      "id": "v-delai-long",
+      "ok": true,
+      "ms": 1227
+    },
+    {
+      "id": "v-gros-reste",
+      "ok": true,
+      "ms": 1284
+    },
+    {
+      "id": "v-nb-factures",
+      "ok": true,
+      "ms": 1025
+    },
+    {
+      "id": "v-nb-impayees-retard",
+      "ok": true,
+      "ms": 1361
+    },
+    {
+      "id": "v-encaisse",
+      "ok": true,
+      "ms": 1174
+    },
+    {
+      "id": "v-dette-frs",
+      "ok": true,
+      "ms": 1451
+    },
+    {
+      "id": "v-stock-total",
+      "ok": true,
+      "ms": 1078
+    },
+    {
+      "id": "v-min-commande",
+      "ok": true,
+      "ms": 1109
+    },
+    {
+      "id": "v-moy-retard",
+      "ok": true,
+      "ms": 1470
+    },
+    {
+      "id": "v-commandes-delta",
+      "ok": true,
+      "ms": 1359
+    },
+    {
+      "id": "v-ca-client",
+      "ok": false,
+      "ms": 1391
+    },
+    {
+      "id": "v-factures-statut",
+      "ok": true,
+      "ms": 1239
+    },
+    {
+      "id": "v-quantite-produit",
+      "ok": false,
+      "ms": 1104
+    },
+    {
+      "id": "v-achats-fournisseur",
+      "ok": true,
+      "ms": 1353
+    },
+    {
+      "id": "v-commandes-client",
+      "ok": false,
+      "ms": 1001
+    },
+    {
+      "id": "v-top-stock",
+      "ok": false,
+      "ms": 1280
+    },
+    {
+      "id": "v-moins-chers",
+      "ok": false,
+      "ms": 1493
+    },
+    {
+      "id": "v-top-commandes",
+      "ok": false,
+      "ms": 1571
+    },
+    {
+      "id": "v-meilleur-client",
+      "ok": false,
+      "ms": 1373
+    },
+    {
+      "id": "v-plus-vendu",
+      "ok": false,
+      "ms": 1104
+    },
+    {
+      "id": "v-anciennes-factures",
+      "ok": true,
+      "ms": 1693
+    },
+    {
+      "id": "v-aout",
+      "ok": true,
+      "ms": 1418
+    },
+    {
+      "id": "v-jusqu-au",
+      "ok": true,
+      "ms": 1392
+    },
+    {
+      "id": "v-annee-derniere",
+      "ok": true,
+      "ms": 1228
+    },
+    {
+      "id": "v-livraisons-mois",
+      "ok": false,
+      "ms": 1165
+    },
+    {
+      "id": "v-entre",
+      "ok": true,
+      "ms": 1438
+    },
+    {
+      "id": "v-mt-impayees",
+      "ok": false,
+      "ms": 1460
+    },
+    {
+      "id": "v-mt-tri",
+      "ok": false,
+      "ms": 1407
+    },
+    {
+      "id": "v-mt-combien",
+      "ok": false,
+      "ms": 903
+    },
+    {
+      "id": "v-mt-categorie",
+      "ok": true,
+      "ms": 1380
+    },
+    {
+      "id": "v-mt-ses-factures",
+      "ok": false,
+      "ms": 1461
+    },
+    {
+      "id": "v-mt-contenu",
+      "ok": false,
+      "ms": 1621
+    },
+    {
+      "id": "v-mt-par-client",
+      "ok": false,
+      "ms": 1103
+    },
+    {
+      "id": "v-mt-nouveau",
+      "ok": true,
+      "ms": 1422
+    },
+    {
+      "id": "v-e-creer",
+      "ok": true,
+      "ms": 714
+    },
+    {
+      "id": "v-e-nouveau",
+      "ok": true,
+      "ms": 700
+    },
+    {
+      "id": "v-e-telephone",
+      "ok": true,
+      "ms": 724
+    },
+    {
+      "id": "v-e-desactiver",
+      "ok": false,
+      "ms": 1113
+    },
+    {
+      "id": "v-e-reactiver",
+      "ok": true,
+      "ms": 742
+    },
+    {
+      "id": "v-e-facture",
+      "ok": true,
+      "ms": 814
+    },
+    {
+      "id": "v-e-paiement",
+      "ok": true,
+      "ms": 736
+    },
+    {
+      "id": "v-e-acompte",
+      "ok": true,
+      "ms": 754
+    },
+    {
+      "id": "v-q-paiement-fait",
+      "ok": true,
+      "ms": 1286
+    },
+    {
+      "id": "v-q-client-cree",
+      "ok": true,
+      "ms": 1235
+    },
+    {
+      "id": "v-r-rentabilite",
+      "ok": true,
+      "ms": 1159
+    },
+    {
+      "id": "v-r-stock-futur",
+      "ok": false,
+      "ms": 1188
+    },
+    {
+      "id": "v-r-supprimer-commande",
+      "ok": true,
+      "ms": 960
+    },
+    {
+      "id": "v-r-fournisseur-creer",
+      "ok": false,
+      "ms": 727
+    },
+    {
+      "id": "v-r-sql",
+      "ok": false,
+      "ms": 714
+    },
+    {
+      "id": "v-r-roles",
+      "ok": true,
+      "ms": 961
+    },
+    {
+      "id": "v-d-sales-ca",
+      "ok": true,
+      "ms": 1606
+    },
+    {
+      "id": "v-d-sales-commandes",
+      "ok": true,
+      "ms": 1245
+    },
+    {
+      "id": "v-d-sales-modifier",
+      "ok": true,
+      "ms": 702
+    },
+    {
+      "id": "v-d-compta-fournisseurs",
+      "ok": true,
+      "ms": 993
+    },
+    {
+      "id": "v-d-compta-lignes",
+      "ok": true,
+      "ms": 882
+    },
+    {
+      "id": "v-c-salut",
+      "ok": true,
+      "ms": 984
+    },
+    {
+      "id": "v-c-top",
+      "ok": true,
+      "ms": 1169
+    },
+    {
+      "id": "v-c-exemples",
+      "ok": true,
+      "ms": 1739
+    },
+    {
+      "id": "v-f-sans-accent",
+      "ok": true,
+      "ms": 1484
+    },
+    {
+      "id": "v-f-phonetique",
+      "ok": true,
+      "ms": 1247
+    },
+    {
+      "id": "v-f-dictee",
+      "ok": true,
+      "ms": 1197
+    },
+    {
+      "id": "v-f-telegraphique",
+      "ok": false,
+      "ms": 1188
+    },
+    {
+      "id": "v-f-anglais",
+      "ok": true,
+      "ms": 1007
+    }
+  ]
+}

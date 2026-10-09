@@ -1,4 +1,4 @@
-import { CATALOGUE, additive, type Vue } from "./catalogue";
+import { CATALOGUE, additive, libelleValeur, type Vue } from "./catalogue";
 import { bornesAppliquees, colonnesDate, libellePeriode } from "./periodes";
 
 const DEVISE = "TND";
@@ -31,9 +31,9 @@ function conditions(spec: any, vue: Vue): string[] {
             if (f.value === true) sortie.push(col.sens ?? col.libelle);
             else sortie.push(`sans ${col.libelle}`);
         } else if (f.op === "eq" || f.op === "like") {
-            sortie.push(`${col.libelle} ${f.value}`);
+            sortie.push(`${col.libelle} ${libelleValeur(col, f.value)}`);
         } else if (f.op === "in") {
-            sortie.push(`${col.libelle} parmi ${(f.value as any[]).join(", ")}`);
+            sortie.push(`${col.libelle} parmi ${(f.value as any[]).map((v) => libelleValeur(col, v)).join(", ")}`);
         } else {
             const mots: Record<string, string> = {
                 gt: "supérieur à", gte: "au moins", lt: "inférieur à", lte: "au plus", neq: "différent de",

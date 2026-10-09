@@ -299,6 +299,45 @@ export async function resoudreFiltres(
 }
 
 // ---------------------------------------------------------------------------
+// Valeurs codées
+// ---------------------------------------------------------------------------
+
+/** « livrées » → « livre », « annulé » → « annule » : genre et nombre ne départagent rien. */
+function radical(s: string): string {
+    return aplatir(s).replace(/_/g, " ").split(" ").map((m) => m.replace(/(es|e|s)$/, "")).join(" ").trim();
+}
+
+/**
+ * Ramène au code exact une valeur écrite en français dans un filtre :
+ * « livrée » → DELIVERED, « chèque » → CHECK, « en_cours » → CONFIRMED.
+ *
+ * Même rôle que la normalisation des actions d'écriture (« par chèque » →
+ * CHECK) : le modèle repère la valeur, le code la traduit. Les correspondances
+ * viennent des `valeurs` déclarées au catalogue. Une valeur sans
+ * correspondance est laissée telle quelle.
+ */
+export function normaliserCodes<F extends Filtre>(vue: string, filtres: F[]): F[] {
+    const colonnes = CATALOGUE[vue]?.colonnes ?? {};
+    const traduire = (col: string, v: unknown): unknown => {
+        const valeurs = colonnes[col]?.valeurs;
+        if (!valeurs || typeof v !== "string") return v;
+        const codes = Object.keys(valeurs);
+        const exact = codes.find((c) => c.toLowerCase() === v.trim().toLowerCase());
+        if (exact) return exact;
+        const cherche = radical(v);
+        if (!cherche) return v;
+        const trouve = codes.find((c) =>
+            [c, ...valeurs[c].split(",")].some((lib) => radical(lib) === cherche));
+        return trouve ?? v;
+    };
+    return filtres.map((f) => {
+        if (!colonnes[f.field]?.valeurs) return f;
+        const value = Array.isArray(f.value) ? f.value.map((x) => traduire(f.field, x)) : traduire(f.field, f.value);
+        return { ...f, value };
+    });
+}
+
+// ---------------------------------------------------------------------------
 // Report du sujet d'un tour à l'autre
 // ---------------------------------------------------------------------------
 

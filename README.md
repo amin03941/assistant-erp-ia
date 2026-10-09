@@ -315,7 +315,7 @@ lib/
   conversations.ts        persistance et mémoire conversationnelle
   session.ts              session courante (Auth.js)
 public/voix/              stt-worker.js — Whisper dans un Web Worker
-eval/                     jeu d'évaluation de la compréhension et rapports
+eval/                     jeux d'évaluation (référence, indépendant, validation) et rapports
 tests/                    tests unitaires
 db/                       schema.sql, seed.sql, roles.sql, README_BD.md
 uploads/                  pièces importées — exclu du dépôt
@@ -356,7 +356,7 @@ libellés des réponses et les questions de clarification en découlent.
 npm test
 ```
 
-225 tests couvrent la normalisation des valeurs, la validation des actions et des
+241 tests couvrent la normalisation des valeurs (dont les valeurs codées des filtres), la validation des actions et des
 requêtes, les périodes, la résolution des entités, la grammaire de sortie par rôle, la
 rédaction des réponses, les graphiques, les indicateurs du tableau de bord, l'extraction
 OCR et la préparation du texte pour la voix. Cinq d'entre eux sont des tests de
@@ -368,54 +368,72 @@ aucune condition non demandée, accord singulier/pluriel.
 ## Évaluation de la compréhension
 
 Les tests unitaires vérifient le code ; ils ne disent rien de la compréhension du
-modèle. Un jeu d'évaluation (`eval/jeu.ts`) y répond : 64 questions avec la
-spécification attendue — type de demande, vue, filtres exacts, agrégat, période. Les
-questions sont regroupées en **familles de reformulations**, dont des variantes
-« dictées » (minuscules, sans ponctuation), pour mesurer si la compréhension dépend de
-la formulation.
+modèle. Trois jeux de questions y répondent, chacun avec la spécification attendue —
+type de demande, vue, filtres exacts, agrégat, regroupement, tri, dates — et toutes les
+interprétations légitimes quand une question en admet plusieurs.
+
+| Jeu | Questions | Rôle |
+|---|---|---|
+| `eval/jeu.ts` — référence | 64 | a servi à **mettre au point** le prompt : score flatteur par construction |
+| `eval/jeu-independant.ts` — indépendant n° 1 | 108 | figé avant exécution ; a ensuite servi à **diagnostiquer** des régressions |
+| `eval/jeu-validation-2.ts` — validation n° 2 | 82 | figé **avant** la correction de ces régressions et lancé une seule fois après : **la mesure honnête** |
+
+Chaque jeu couvre tout le périmètre — chaque vue, chaque rôle, chaque action, calculs,
+regroupements, tris, dates, conversations en plusieurs messages, refus, fautes de frappe
+et langage oral. L'historique Git montre que les jeux indépendants ont été commités avant
+d'être exécutés.
 
 ```bash
-npx vitest run --config vitest.eval.config.ts                                          # modèle local
-LLM_FORCE=gemini GEMINI_MODEL=gemini-3.5-flash npx vitest run --config vitest.eval.config.ts   # modèle distant
+npx vitest run --config vitest.eval.config.ts                                  # jeu de référence
+EVAL_JEU=independant npx vitest run --config vitest.eval.config.ts              # jeu indépendant n° 1
+EVAL_JEU=validation2 npx vitest run --config vitest.eval.config.ts              # jeu de validation n° 2
 ```
 
 Chaque exécution écrit un rapport dans `eval/resultats/` après chaque question : score
-global, score par famille, latence médiane et p90, et pour chaque échec ce que le
-système a compris à la place.
+global, score par famille, latence, et pour chaque échec ce que le système a compris. Le
+lanceur s'exécute aussi sur la version de départ du projet, ce qui permet de comparer les
+versions sur les mêmes questions.
 
-| `qwen3.5:9b` local, température 0 | Score | Latence médiane |
-|---|---|---|
-| Départ (commit `d60aaf0`), 50 questions d'origine | 37 / 50 — 74 % | 1,9 s |
-| Version actuelle, mêmes 50 questions | 50 / 50 — 100 % | 1,4 s |
-| Version actuelle, jeu complet (affinements, dates, reprises, chiffre d'affaires) | 64 / 64 — 100 % | 1,4 s |
+### Résultats — `qwen3.5:9b` local, température 0
 
-Un score de 100 % sur ce jeu ne veut pas dire que toute question sera comprise : il dit
-que les 64 formulations de référence le sont, et qu'une modification qui en casserait
-une serait vue aussitôt.
+| | Départ (`d60aaf0`) | Avant correction des régressions | Version actuelle |
+|---|---|---|---|
+| **Validation n° 2** (mesure honnête) | 47 / 82 — 57,3 % | 53 / 82 — 64,6 % | **69 / 82 — 84,1 %** |
+| Indépendant n° 1 (a servi au diagnostic) | 73 / 108 — 67,6 % | 81 / 108 — 75,0 % | 99 / 108 — 91,7 % |
+| Référence (a servi à la mise au point) | 37 / 50 — 74 % | 64 / 64 — 100 % | 63 / 64 — 98,4 % |
+| Latence médiane | 1,7 à 1,8 s | 1,2 s | 1,2 s |
 
-C'est ce qui s'est produit plusieurs fois. Des modifications du prompt qui corrigeaient
-un cas en cassaient un autre : « montant total restant à payer » excluait soudain les
-factures en retard ; un prompt réécrit transformait les listes en comptages. Chaque écart
-a été vu et corrigé avant d'atteindre l'interface. Une régression est aussi passée au
-travers — « seulement celles en retard » oubliait le client de la question précédente —
-parce qu'aucun cas d'affinement ne figurait dans le jeu. Elle a été trouvée en vérifiant
-les exemples de ce document ; la famille « affinement » a été ajoutée au jeu, pour
-qu'elle ne puisse plus revenir sans être vue.
+**Ce que le jeu indépendant a appris.** Après la première série d'améliorations, le jeu de
+référence affichait 100 % ; le jeu indépendant n° 1, écrit sans regarder ces
+améliorations, n'en montrait que 75 % — et révélait que la réécriture du prompt avait fait
+**régresser** des familles entières par rapport à la version de départ : les regroupements
+et classements (de 7/10 à 2/10), le suivi de conversation (de 6/7 à 3/7), les valeurs de
+statut (« livrée » au lieu de `DELIVERED`). Un score de mise au point ne mesure pas la
+généralisation ; un jeu indépendant, si.
 
-**Comparaison avec un modèle distant.** L'offre gratuite de Gemini est limitée à 20
-requêtes par jour et par modèle : l'évaluation de `gemini-3.5-flash` se fait en
-plusieurs jours, le mode reprise ne jouant que les questions absentes du rapport.
+**Ce qui a été corrigé, en termes généraux.** Le catalogue déclare désormais les valeurs
+codées de chaque colonne et leurs libellés français ; le modèle les voit, et le code
+ramène au code exact une valeur écrite en français. Le prompt explique les regroupements,
+les tris et le suivi des résultats précédents. Les exemples ajoutés ne reprennent aucune
+question du jeu de validation n° 2.
 
-| Sur les 40 questions mesurées des deux côtés | Score | Latence médiane |
+**Ce qui reste faible** (13 échecs sur 82 en validation) : les classements du type « quel
+est notre meilleur client », certaines conversations en plusieurs messages (« uniquement
+les impayées », « que contient-elle ? »), une commande SQL brute classée comme demande
+d'écriture au lieu d'être refusée — sans conséquence, puisque le modèle ne produit jamais
+de SQL et qu'aucune écriture n'a lieu sans confirmation — et l'ajout d'un fournisseur,
+action inexistante, proposé comme ajout de client — la carte de confirmation le montre
+avant toute écriture.
+
+**Comparaison avec un modèle distant.** Sur les 40 questions du jeu de référence mesurées
+avec `gemini-3.5-flash` (offre gratuite limitée à 20 requêtes par jour et par modèle ;
+mesure du 5 octobre, sur la version de l'époque) :
+
+| | Score | Latence médiane |
 |---|---|---|
 | `qwen3.5:9b` local, version de départ | 30 / 40 | 2,5 s |
-| `qwen3.5:9b` local, version actuelle | 40 / 40 | 1,4 s |
+| `qwen3.5:9b` local, version actuelle | 39 / 40 | 1,2 s |
 | `gemini-3.5-flash` distant | 40 / 40 | 4,4 s |
-
-Sur ces questions, le modèle local de 9 milliards de paramètres fait jeu égal avec le
-modèle distant, en répondant trois fois plus vite et sans que les données quittent la
-machine. La mesure Gemini date du 5 octobre, sur la version de l'époque. Pour jouer
-les questions restantes :
 
 ```bash
 EVAL_REPRISE=eval/resultats/2026-10-05-00-50-gemini-3.5-flash.json LLM_FORCE=gemini GEMINI_MODEL=gemini-3.5-flash npx vitest run --config vitest.eval.config.ts

@@ -4,6 +4,13 @@ export type Colonne = {
     sens?: string;
     resume?: boolean;
     /**
+     * Valeurs codées que la colonne peut prendre, avec leurs libellés français
+     * (plusieurs formulations séparées par des virgules). Le modèle les voit
+     * dans le prompt ; le code ramène au code exact une valeur écrite en
+     * français (« livrée » → DELIVERED) ; la réponse les affiche en français.
+     */
+    valeurs?: Record<string, string>;
+    /**
      * false pour un montant qui ne s'additionne pas : un prix unitaire. La
      * somme de deux prix unitaires n'est le prix de rien. Ni la synthèse ni
      * une agrégation "sum" ne l'additionnent ; moyenne, minimum et maximum
@@ -26,6 +33,18 @@ export type Vue = {
     intitule?: string;
 };
 
+// Valeurs codées, telles que les CHECK de db/schema.sql les imposent.
+const STATUT_FACTURE = {
+    DRAFT: "brouillon", ISSUED: "émise, en attente de paiement", PARTIALLY_PAID: "partiellement payée",
+    PAID: "payée, soldée, réglée", CANCELLED: "annulée",
+};
+const STATUT_COMMANDE = { DRAFT: "brouillon", CONFIRMED: "confirmée, en cours", DELIVERED: "livrée", CANCELLED: "annulée" };
+const STATUT_FICHE = { ACTIVE: "actif, en activité, commercialisé", ARCHIVED: "archivé, inactif, désactivé, plus commercialisé" };
+const STATUT_PAIEMENT = { PENDING: "en attente", CONFIRMED: "confirmé, reçu", FAILED: "échoué, rejeté" };
+const MODE_PAIEMENT = { CASH: "espèces, liquide", CHECK: "chèque", BANK_TRANSFER: "virement", CARD: "carte bancaire", OTHER: "autre" };
+const TYPE_PRODUIT = { GOOD: "bien, article", SERVICE: "service, prestation" };
+const ORIGINE = { MANUAL: "saisie manuelle", IMPORT: "import, OCR", SEED: "données initiales" };
+
 export const CATALOGUE: Record<string, Vue> = {
     v_sales_invoices: {
         entite: { singulier: "facture de vente", pluriel: "factures de vente", genre: "f" },
@@ -38,7 +57,7 @@ export const CATALOGUE: Record<string, Vue> = {
             order_reference: { libelle: "commande liée", type: "texte" },
             invoice_date: { libelle: "date de facture", type: "date" },
             due_date: { libelle: "échéance", type: "date" },
-            status: { libelle: "statut", type: "texte" },
+            status: { libelle: "statut", type: "texte", valeurs: STATUT_FACTURE },
             subtotal_amount: { libelle: "montant hors taxe", type: "montant" },
             tax_amount: { libelle: "montant de taxe", type: "montant" },
             total_amount: { libelle: "montant TTC", type: "montant" },
@@ -60,7 +79,7 @@ export const CATALOGUE: Record<string, Vue> = {
             email: { libelle: "email", type: "texte" },
             phone: { libelle: "téléphone", type: "texte" },
             payment_terms_days: { libelle: "délai de paiement (jours)", type: "nombre" },
-            status: { libelle: "statut", type: "texte" },
+            status: { libelle: "statut", type: "texte", valeurs: STATUT_FICHE },
         },
     },
 
@@ -72,12 +91,12 @@ export const CATALOGUE: Record<string, Vue> = {
             reference: { libelle: "référence", type: "texte" },
             name: { libelle: "nom", type: "texte" },
             category: { libelle: "catégorie", type: "texte" },
-            product_type: { libelle: "type de produit", type: "texte" },
+            product_type: { libelle: "type de produit", type: "texte", valeurs: TYPE_PRODUIT },
             unit: { libelle: "unité", type: "texte" },
             sale_price: { libelle: "prix de vente", type: "montant", additif: false },
             tax_rate: { libelle: "taux de taxe", type: "nombre" },
             stock_quantity: { libelle: "quantité en stock", type: "nombre" },
-            status: { libelle: "statut", type: "texte" },
+            status: { libelle: "statut", type: "texte", valeurs: STATUT_FICHE },
         },
     },
 
@@ -91,7 +110,7 @@ export const CATALOGUE: Record<string, Vue> = {
             customer_name: { libelle: "client", type: "texte" },
             order_date: { libelle: "date de commande", type: "date" },
             expected_delivery_date: { libelle: "date de livraison prévue", type: "date" },
-            status: { libelle: "statut", type: "texte" },
+            status: { libelle: "statut", type: "texte", valeurs: STATUT_COMMANDE },
             total_amount: { libelle: "montant total", type: "montant" },
             is_late: { libelle: "en retard de livraison", type: "booleen", sens: "en retard de livraison" },
             days_late: { libelle: "jours de retard", type: "duree" },
@@ -128,7 +147,7 @@ export const CATALOGUE: Record<string, Vue> = {
             unit_price: { libelle: "prix unitaire", type: "montant", additif: false },
             line_total: { libelle: "total de ligne", type: "montant" },
             invoice_date: { libelle: "date de facture", type: "date" },
-            invoice_status: { libelle: "statut de la facture", type: "texte" },
+            invoice_status: { libelle: "statut de la facture", type: "texte", valeurs: STATUT_FACTURE },
         },
     },
 
@@ -142,8 +161,8 @@ export const CATALOGUE: Record<string, Vue> = {
             invoice_number: { libelle: "numéro de facture", type: "texte" },
             payment_date: { libelle: "date de paiement", type: "date" },
             amount: { libelle: "montant", type: "montant" },
-            payment_method: { libelle: "méthode de paiement", type: "texte" },
-            status: { libelle: "statut", type: "texte" },
+            payment_method: { libelle: "méthode de paiement", type: "texte", valeurs: MODE_PAIEMENT },
+            status: { libelle: "statut", type: "texte", valeurs: STATUT_PAIEMENT },
         },
     },
 
@@ -173,7 +192,7 @@ export const CATALOGUE: Record<string, Vue> = {
             email: { libelle: "email", type: "texte" },
             phone: { libelle: "téléphone", type: "texte" },
             payment_terms_days: { libelle: "délai de paiement (jours)", type: "nombre" },
-            status: { libelle: "statut", type: "texte" },
+            status: { libelle: "statut", type: "texte", valeurs: STATUT_FICHE },
         },
     },
 
@@ -187,7 +206,7 @@ export const CATALOGUE: Record<string, Vue> = {
             supplier_name: { libelle: "fournisseur", type: "texte" },
             invoice_date: { libelle: "date de facture", type: "date" },
             due_date: { libelle: "échéance", type: "date" },
-            status: { libelle: "statut", type: "texte" },
+            status: { libelle: "statut", type: "texte", valeurs: STATUT_FACTURE },
             subtotal_amount: { libelle: "montant hors taxe", type: "montant" },
             tax_amount: { libelle: "montant de taxe", type: "montant" },
             total_amount: { libelle: "montant TTC", type: "montant" },
@@ -195,7 +214,7 @@ export const CATALOGUE: Record<string, Vue> = {
             remaining_amount: { libelle: "reste à payer", type: "montant", resume: true },
             is_unpaid: { libelle: "avec reste à payer", type: "booleen", sens: "ayant un reste à payer" },
             is_overdue: { libelle: "en retard", type: "booleen", sens: "en retard de paiement" },
-            source: { libelle: "origine", type: "texte" },
+            source: { libelle: "origine", type: "texte", valeurs: ORIGINE },
         },
     },
 };
@@ -209,11 +228,30 @@ export function colonnesDe(vue: Vue) {
     return Object.keys(vue.colonnes);
 }
 
+/**
+ * Une colonne telle que le modèle la voit : son nom, son sens en français et,
+ * le cas échéant, ses valeurs codées. Sans le libellé, « matricule fiscal » ne
+ * pouvait pas être relié à tax_identifier ; sans les valeurs, « livrée »
+ * restait « livrée » au lieu de DELIVERED.
+ */
+function decrireColonne(nom: string, c: Colonne): string {
+    const valeurs = c.valeurs
+        ? ` ; valeurs : ${Object.entries(c.valeurs).map(([code, lib]) => `${code} = ${lib}`).join(" | ")}`
+        : "";
+    return `${nom} (${c.libelle}${valeurs})`;
+}
+
 export function cataloguePourRole(role: string) {
     return Object.entries(CATALOGUE)
         .filter(([, v]) => v.roles.includes(role))
-        .map(([nom, v]) => `${nom} — ${v.description}\n  colonnes : ${colonnesDe(v).join(", ")}`)
+        .map(([nom, v]) => `${nom} — ${v.description}\n  colonnes : ${Object.entries(v.colonnes).map(([n, c]) => decrireColonne(n, c)).join(", ")}`)
         .join("\n\n");
+}
+
+/** Libellé français d'une valeur codée : DELIVERED → « livrée ». */
+export function libelleValeur(c: Colonne | undefined, valeur: unknown): string {
+    const lib = c?.valeurs?.[String(valeur)];
+    return lib ? lib.split(",")[0].trim() : String(valeur);
 }
 
 /**

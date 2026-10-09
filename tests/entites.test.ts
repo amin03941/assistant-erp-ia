@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { repriseExplicite, reporterSujet, resoudreFiltres, type Sujets } from "@/lib/entites";
+import { normaliserCodes, repriseExplicite, reporterSujet, resoudreFiltres, type Sujets } from "@/lib/entites";
 import { synthetiser } from "@/lib/synthese";
 
 /**
@@ -130,4 +130,32 @@ describe("reprises reconnaissables par la grammaire", () => {
         "quelles sont les factures impayées ?",
         "liste des produits de la catégorie Réseau",
     ])("ignore « %s »", (q) => expect(repriseExplicite(q)).toBe(false));
+});
+
+describe("valeurs codées écrites en français", () => {
+    it.each([
+        ["v_sales_orders", "status", "livrée", "DELIVERED"],
+        ["v_sales_orders", "status", "Livrées", "DELIVERED"],
+        ["v_sales_orders", "status", "annulée", "CANCELLED"],
+        ["v_sales_orders", "status", "en_cours", "CONFIRMED"],
+        ["v_customers", "status", "archivé", "ARCHIVED"],
+        ["v_customers", "status", "inactif", "ARCHIVED"],
+        ["v_customer_payments", "payment_method", "chèque", "CHECK"],
+        ["v_customer_payments", "payment_method", "virement", "BANK_TRANSFER"],
+        ["v_customer_payments", "status", "en attente", "PENDING"],
+        ["v_sales_invoices", "status", "partiellement payée", "PARTIALLY_PAID"],
+        ["v_sales_invoices", "status", "PAID", "PAID"],
+        ["v_sales_invoices", "status", "paid", "PAID"],
+    ])("%s.%s : « %s » → %s", (vue, colonne, valeur, code) => {
+        expect(normaliserCodes(vue, [{ field: colonne, op: "eq", value: valeur }])[0].value).toBe(code);
+    });
+
+    it("traduit chaque élément d'une liste, ne touche ni aux colonnes sans valeurs ni à l'inconnu", () => {
+        const r = normaliserCodes("v_sales_orders", [
+            { field: "status", op: "in", value: ["livrée", "annulée"] },
+            { field: "customer_name", op: "eq", value: "livrée" },
+            { field: "status", op: "eq", value: "introuvable" },
+        ]);
+        expect(r.map((f) => f.value)).toEqual([["DELIVERED", "CANCELLED"], "livrée", "introuvable"]);
+    });
 });

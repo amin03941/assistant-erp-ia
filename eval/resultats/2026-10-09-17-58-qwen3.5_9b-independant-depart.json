@@ -1,0 +1,1417 @@
+{
+  "date": "2026-10-09T17:58:27.431Z",
+  "sessions": [
+    "2026-10-09T17:58:27.431Z"
+  ],
+  "jeu": "independant",
+  "modele": "qwen3.5:9b",
+  "commit": "d60aaf0",
+  "complet": true,
+  "score": {
+    "reussis": 73,
+    "total": 108,
+    "taux": 67.6
+  },
+  "erreurs_api": [],
+  "latence_ms": {
+    "mediane": 1686,
+    "p90": 2578
+  },
+  "familles": {
+    "consultation": {
+      "reussis": 12,
+      "total": 17
+    },
+    "filtres": {
+      "reussis": 9,
+      "total": 15
+    },
+    "calculs": {
+      "reussis": 7,
+      "total": 12
+    },
+    "regroupements": {
+      "reussis": 7,
+      "total": 10
+    },
+    "dates": {
+      "reussis": 2,
+      "total": 6
+    },
+    "multi-tours": {
+      "reussis": 6,
+      "total": 7
+    },
+    "écriture": {
+      "reussis": 10,
+      "total": 10
+    },
+    "question ou ordre": {
+      "reussis": 3,
+      "total": 3
+    },
+    "refus": {
+      "reussis": 7,
+      "total": 9
+    },
+    "droits": {
+      "reussis": 4,
+      "total": 7
+    },
+    "conversation": {
+      "reussis": 0,
+      "total": 4
+    },
+    "robustesse": {
+      "reussis": 6,
+      "total": 8
+    }
+  },
+  "echecs": [
+    {
+      "id": "i-fournisseurs",
+      "question": "quels sont nos fournisseurs ?",
+      "ecarts": [
+        "type refus au lieu de lecture"
+      ],
+      "compris": {
+        "type": "refus",
+        "mode": "nouvelle",
+        "refusal_reason": "Cette action n'est pas autorisée pour votre rôle.",
+        "ok": false,
+        "raison": "Cette action n'est pas autorisée pour votre rôle."
+      }
+    },
+    {
+      "id": "i-achats",
+      "question": "liste des factures d'achat",
+      "ecarts": [
+        "type refus au lieu de lecture"
+      ],
+      "compris": {
+        "type": "refus",
+        "mode": "nouvelle",
+        "refusal_reason": "Cette action n'est pas autorisée pour votre rôle.",
+        "ok": false,
+        "raison": "Cette action n'est pas autorisée pour votre rôle."
+      }
+    },
+    {
+      "id": "i-cout",
+      "question": "combien coûte le disque SSD ?",
+      "ecarts": [
+        "type refus au lieu de lecture"
+      ],
+      "compris": {
+        "type": "refus",
+        "mode": "nouvelle",
+        "refusal_reason": "Cette action n'est pas autorisée pour votre rôle.",
+        "ok": false,
+        "raison": "Cette action n'est pas autorisée pour votre rôle."
+      }
+    },
+    {
+      "id": "i-achats-frs",
+      "question": "factures d'achat du fournisseur Bureau Plus",
+      "ecarts": [
+        "type refus au lieu de lecture"
+      ],
+      "compris": {
+        "type": "refus",
+        "mode": "nouvelle",
+        "refusal_reason": "Cette action n'est pas autorisée pour votre rôle.",
+        "ok": false,
+        "raison": "Cette action n'est pas autorisée pour votre rôle."
+      }
+    },
+    {
+      "id": "i-matricule",
+      "question": "matricule fiscal du fournisseur TechnoImport",
+      "ecarts": [
+        "type refus au lieu de lecture"
+      ],
+      "compris": {
+        "type": "refus",
+        "mode": "nouvelle",
+        "refusal_reason": "Cette action n'est pas autorisée pour votre rôle.",
+        "ok": false,
+        "raison": "Cette action n'est pas autorisée pour votre rôle."
+      }
+    },
+    {
+      "id": "i-partielles",
+      "question": "factures partiellement payées",
+      "ecarts": [
+        "filtre manquant : status"
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_sales_invoices",
+        "select": [
+          "invoice_number",
+          "customer_name",
+          "total_amount",
+          "paid_amount",
+          "remaining_amount",
+          "is_unpaid",
+          "is_overdue"
+        ],
+        "filters": [
+          {
+            "field": "is_unpaid",
+            "op": "eq",
+            "value": true
+          }
+        ],
+        "order_by": {
+          "field": "invoice_date",
+          "dir": "desc"
+        },
+        "limit": 20,
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "i-services",
+      "question": "quels sont les services que nous proposons ?",
+      "ecarts": [
+        "filtre manquant : category|product_type"
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_products",
+        "select": [
+          "reference",
+          "name",
+          "category",
+          "product_type"
+        ],
+        "filters": [],
+        "order_by": {
+          "field": "name",
+          "dir": "asc"
+        },
+        "limit": 20,
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "i-cheque",
+      "question": "paiements par chèque",
+      "ecarts": [
+        "filtre payment_method = \"chèque\""
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_customer_payments",
+        "select": [
+          "reference",
+          "customer_name",
+          "invoice_number",
+          "payment_date",
+          "amount",
+          "payment_method",
+          "status"
+        ],
+        "filters": [
+          {
+            "field": "payment_method",
+            "op": "eq",
+            "value": "chèque"
+          },
+          {
+            "field": "status",
+            "op": "eq",
+            "value": "CONFIRMED"
+          }
+        ],
+        "order_by": {
+          "field": "payment_date",
+          "dir": "desc"
+        },
+        "limit": 20,
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "i-attente",
+      "question": "paiements en attente",
+      "ecarts": [
+        "vue v_sales_invoices au lieu de v_customer_payments",
+        "filtre status = \"PAID\"",
+        "filtre en trop : is_unpaid = true"
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_sales_invoices",
+        "filters": [
+          {
+            "field": "is_unpaid",
+            "op": "eq",
+            "value": true
+          },
+          {
+            "field": "status",
+            "op": "neq",
+            "value": "PAID"
+          }
+        ],
+        "aggregate": {
+          "fn": "sum",
+          "field": "remaining_amount"
+        },
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "i-import",
+      "question": "quelles factures fournisseurs proviennent d'un import ?",
+      "ecarts": [
+        "type refus au lieu de lecture"
+      ],
+      "compris": {
+        "type": "refus",
+        "mode": "nouvelle",
+        "refusal_reason": "Cette action n'est pas autorisée pour votre rôle.",
+        "ok": false,
+        "raison": "Cette action n'est pas autorisée pour votre rôle."
+      }
+    },
+    {
+      "id": "i-achats-impayes",
+      "question": "factures fournisseurs non réglées",
+      "ecarts": [
+        "type refus au lieu de lecture"
+      ],
+      "compris": {
+        "type": "refus",
+        "mode": "nouvelle",
+        "refusal_reason": "Cette action n'est pas autorisée pour votre rôle.",
+        "ok": false,
+        "raison": "Cette action n'est pas autorisée pour votre rôle."
+      }
+    },
+    {
+      "id": "i-nb-fournisseurs",
+      "question": "nombre de fournisseurs",
+      "ecarts": [
+        "type refus au lieu de lecture"
+      ],
+      "compris": {
+        "type": "refus",
+        "mode": "nouvelle",
+        "refusal_reason": "Cette action n'est pas autorisée pour votre rôle.",
+        "ok": false,
+        "raison": "Cette action n'est pas autorisée pour votre rôle."
+      }
+    },
+    {
+      "id": "i-facture-client",
+      "question": "montant total facturé à Medina Textile",
+      "ecarts": [
+        "vue v_sales_invoice_items au lieu de v_sales_invoices",
+        "agrégat sur line_total au lieu de total_amount|subtotal_amount"
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_sales_invoice_items",
+        "select": [
+          "line_total"
+        ],
+        "filters": [
+          {
+            "field": "customer_name",
+            "op": "eq",
+            "value": "Medina Textile"
+          }
+        ],
+        "aggregate": {
+          "fn": "sum",
+          "field": "line_total"
+        },
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "i-actifs",
+      "question": "combien de clients actifs ?",
+      "ecarts": [
+        "agrégat null au lieu de count"
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_customers",
+        "select": [
+          "reference",
+          "name"
+        ],
+        "filters": [
+          {
+            "field": "status",
+            "op": "eq",
+            "value": "active"
+          }
+        ],
+        "order_by": {
+          "field": "reference",
+          "dir": "asc"
+        },
+        "limit": 20,
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "i-total-achats",
+      "question": "total des factures d'achat",
+      "ecarts": [
+        "type refus au lieu de lecture"
+      ],
+      "compris": {
+        "type": "refus",
+        "mode": "nouvelle",
+        "refusal_reason": "Cette action n'est pas autorisée pour votre rôle.",
+        "ok": false,
+        "raison": "Cette action n'est pas autorisée pour votre rôle."
+      }
+    },
+    {
+      "id": "i-paye-frs",
+      "question": "combien avons-nous payé à nos fournisseurs ?",
+      "ecarts": [
+        "type refus au lieu de lecture"
+      ],
+      "compris": {
+        "type": "refus",
+        "mode": "nouvelle",
+        "refusal_reason": "Cette action n'est pas autorisée pour votre rôle.",
+        "ok": false,
+        "raison": "Cette action n'est pas autorisée pour votre rôle."
+      }
+    },
+    {
+      "id": "i-reste-par-client",
+      "question": "reste à payer par client",
+      "ecarts": [
+        "regroupement undefined au lieu de customer_name|customer_reference"
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_sales_invoices",
+        "filters": [
+          {
+            "field": "is_unpaid",
+            "op": "eq",
+            "value": true
+          }
+        ],
+        "aggregate": {
+          "fn": "sum",
+          "field": "remaining_amount"
+        },
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "i-plus-endette",
+      "question": "quel client nous doit le plus d'argent ?",
+      "ecarts": [
+        "tri sur undefined au lieu de resultat"
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_sales_invoices",
+        "filters": [
+          {
+            "field": "is_unpaid",
+            "op": "eq",
+            "value": true
+          }
+        ],
+        "aggregate": {
+          "fn": "sum",
+          "field": "remaining_amount"
+        },
+        "group_by": [
+          "customer_name"
+        ],
+        "limit": 1,
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "i-recentes",
+      "question": "les dernières commandes passées",
+      "ecarts": [
+        "filtre en trop : status = \"CONFIRMED\""
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_sales_orders",
+        "select": [
+          "reference",
+          "customer_name",
+          "order_date",
+          "expected_delivery_date",
+          "status",
+          "total_amount",
+          "is_late",
+          "days_late"
+        ],
+        "filters": [
+          {
+            "field": "status",
+            "op": "eq",
+            "value": "CONFIRMED"
+          }
+        ],
+        "order_by": {
+          "field": "order_date",
+          "dir": "desc"
+        },
+        "limit": 20,
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "i-paiements-mois",
+      "question": "paiements reçus le mois dernier",
+      "ecarts": [
+        "dates [… ; …[ au lieu de [2026-09-01 ; 2026-10-01["
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_customer_payments",
+        "filters": [
+          {
+            "field": "status",
+            "op": "eq",
+            "value": "CONFIRMED"
+          }
+        ],
+        "aggregate": {
+          "fn": "sum",
+          "field": "amount"
+        },
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "i-nb-annee",
+      "question": "combien de factures cette année ?",
+      "ecarts": [
+        "dates [2024-01-01 ; 2025-01-01[ au lieu de [2026-01-01 ; 2027-01-01["
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_sales_invoices",
+        "select": [
+          "invoice_number"
+        ],
+        "filters": [
+          {
+            "field": "invoice_date",
+            "op": "gte",
+            "value": "2024-01-01"
+          },
+          {
+            "field": "invoice_date",
+            "op": "lte",
+            "value": "2024-12-31"
+          }
+        ],
+        "aggregate": {
+          "fn": "count"
+        },
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "i-echeance-mois",
+      "question": "factures dont l'échéance tombe ce mois-ci",
+      "ecarts": [
+        "dates [… ; …[ au lieu de [2026-10-01 ; 2026-11-01["
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_sales_invoices",
+        "select": [
+          "invoice_number",
+          "customer_name",
+          "invoice_date",
+          "due_date",
+          "status",
+          "remaining_amount"
+        ],
+        "filters": [],
+        "order_by": {
+          "field": "due_date",
+          "dir": "asc"
+        },
+        "limit": 20,
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "i-semestre",
+      "question": "chiffre d'affaires du premier semestre 2026",
+      "ecarts": [
+        "agrégat null au lieu de sum"
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_sales_invoice_items",
+        "select": [
+          "product_reference",
+          "product_name",
+          "description",
+          "quantity",
+          "unit_price",
+          "line_total",
+          "invoice_date"
+        ],
+        "filters": [
+          {
+            "field": "invoice_date",
+            "op": "gte",
+            "value": "2026-01-01"
+          },
+          {
+            "field": "invoice_date",
+            "op": "lte",
+            "value": "2026-06-30"
+          }
+        ],
+        "order_by": {
+          "field": "invoice_date",
+          "dir": "asc"
+        },
+        "limit": 20,
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "i-total-tour",
+      "question": "combien cela fait-il au total ?",
+      "ecarts": [
+        "type refus au lieu de lecture"
+      ],
+      "compris": {
+        "type": "refus",
+        "mode": "nouvelle",
+        "refusal_reason": "La question est trop vague pour déterminer la vue et le champ à agréger sans contexte supplémentaire.",
+        "ok": false,
+        "raison": "La question est trop vague pour déterminer la vue et le champ à agréger sans contexte supplémentaire."
+      }
+    },
+    {
+      "id": "i-r-montant",
+      "question": "modifie le montant de la facture FAC-2026-0042 à 1 000 dinars",
+      "ecarts": [
+        "type ecriture au lieu de refus"
+      ],
+      "compris": {
+        "type": "ecriture",
+        "mode": "nouvelle",
+        "action": {
+          "code": "UPDATE_CUSTOMER"
+        },
+        "ok": true
+      }
+    },
+    {
+      "id": "i-r-produit",
+      "question": "crée un nouveau produit Imprimante laser à 900 dinars",
+      "ecarts": [
+        "type ecriture au lieu de refus"
+      ],
+      "compris": {
+        "type": "ecriture",
+        "mode": "nouvelle",
+        "action": {
+          "code": "CREATE_SALES_INVOICE"
+        },
+        "ok": true
+      }
+    },
+    {
+      "id": "i-d-sales-facturer",
+      "question": "facture la commande CMD-2026-0005",
+      "ecarts": [
+        "type lecture au lieu de refus"
+      ],
+      "compris": {
+        "ok": false,
+        "mode": "nouvelle",
+        "view": "v_sales_orders",
+        "select": [
+          "reference",
+          "customer_reference",
+          "customer_name",
+          "order_date",
+          "expected_delivery_date",
+          "status",
+          "total_amount",
+          "is_late",
+          "days_late"
+        ],
+        "filters": [
+          {
+            "field": "reference",
+            "op": "eq",
+            "value": "CMD-2026-0005"
+          }
+        ],
+        "order_by": {
+          "field": "reference",
+          "dir": "asc"
+        },
+        "limit": 1,
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "i-d-compta-commandes",
+      "question": "quelles commandes sont en retard ?",
+      "ecarts": [
+        "type lecture au lieu de refus"
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_sales_invoices",
+        "select": [
+          "invoice_number",
+          "customer_name",
+          "order_reference",
+          "due_date",
+          "days_overdue"
+        ],
+        "filters": [
+          {
+            "field": "is_overdue",
+            "op": "eq",
+            "value": true
+          }
+        ],
+        "order_by": {
+          "field": "days_overdue",
+          "dir": "desc"
+        },
+        "limit": 20,
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "i-d-admin",
+      "question": "liste des clients",
+      "ecarts": [
+        "type lecture au lieu de refus"
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_customers",
+        "select": [
+          "id",
+          "name",
+          "email"
+        ],
+        "filters": [],
+        "order_by": {
+          "field": "name",
+          "dir": "asc"
+        },
+        "limit": 20,
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "i-c-bonsoir",
+      "question": "bonsoir",
+      "ecarts": [
+        "type lecture au lieu de conversation"
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_customers",
+        "select": [
+          "reference",
+          "name"
+        ],
+        "filters": [],
+        "order_by": {
+          "field": "reference",
+          "dir": "asc"
+        },
+        "limit": 20,
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "i-c-merci",
+      "question": "merci, c'est parfait",
+      "ecarts": [
+        "type lecture au lieu de conversation"
+      ],
+      "compris": {
+        "ok": false,
+        "mode": "nouvelle",
+        "view": "v_sales_invoices",
+        "select": [
+          "invoice_number",
+          "customer_reference",
+          "customer_name",
+          "order_reference",
+          "invoice_date",
+          "due_date",
+          "status",
+          "subtotal_amount",
+          "tax_amount",
+          "total_amount",
+          "paid_amount",
+          "remaining_amount",
+          "is_unpaid",
+          "is_overdue",
+          "days_overdue"
+        ],
+        "filters": [],
+        "order_by": {
+          "field": "invoice_date",
+          "dir": "desc"
+        },
+        "limit": 20,
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "i-c-aide",
+      "question": "tu peux faire quoi exactement ?",
+      "ecarts": [
+        "type refus au lieu de conversation"
+      ],
+      "compris": {
+        "type": "refus",
+        "mode": "nouvelle",
+        "refusal_reason": "Cette action n'est pas autorisée pour votre rôle.",
+        "ok": false,
+        "raison": "Cette action n'est pas autorisée pour votre rôle."
+      }
+    },
+    {
+      "id": "i-c-qui",
+      "question": "qui es-tu ?",
+      "ecarts": [
+        "type refus au lieu de conversation"
+      ],
+      "compris": {
+        "type": "refus",
+        "mode": "nouvelle",
+        "refusal_reason": "Cette action n'est pas autorisée pour votre rôle.",
+        "ok": false,
+        "raison": "Cette action n'est pas autorisée pour votre rôle."
+      }
+    },
+    {
+      "id": "i-f-svp",
+      "question": "liste des fournisseur svp",
+      "ecarts": [
+        "type refus au lieu de lecture"
+      ],
+      "compris": {
+        "type": "refus",
+        "mode": "nouvelle",
+        "refusal_reason": "Cette action n'est pas autorisée pour votre rôle.",
+        "ok": false,
+        "raison": "Cette action n'est pas autorisée pour votre rôle."
+      }
+    },
+    {
+      "id": "i-f-majuscules",
+      "question": "CLIENTS EN RETARD DE PAIEMENT",
+      "ecarts": [
+        "vue v_customers au lieu de v_sales_invoices",
+        "filtre manquant : is_overdue",
+        "filtre en trop : status = \"inactive\""
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_customers",
+        "select": [
+          "reference",
+          "name",
+          "status"
+        ],
+        "filters": [
+          {
+            "field": "status",
+            "op": "eq",
+            "value": "inactive"
+          }
+        ],
+        "order_by": {
+          "field": "reference",
+          "dir": "asc"
+        },
+        "limit": 20,
+        "type": "lecture"
+      }
+    }
+  ],
+  "cas": [
+    {
+      "id": "i-clients",
+      "ok": true,
+      "ms": 2420
+    },
+    {
+      "id": "i-catalogue",
+      "ok": true,
+      "ms": 1903
+    },
+    {
+      "id": "i-fournisseurs",
+      "ok": false,
+      "ms": 879
+    },
+    {
+      "id": "i-paiements",
+      "ok": true,
+      "ms": 2140
+    },
+    {
+      "id": "i-achats",
+      "ok": false,
+      "ms": 868
+    },
+    {
+      "id": "i-commandes",
+      "ok": true,
+      "ms": 2049
+    },
+    {
+      "id": "i-lignes-facture",
+      "ok": true,
+      "ms": 2533
+    },
+    {
+      "id": "i-vendus-client",
+      "ok": true,
+      "ms": 1917
+    },
+    {
+      "id": "i-fiche-client",
+      "ok": true,
+      "ms": 2026
+    },
+    {
+      "id": "i-delai",
+      "ok": true,
+      "ms": 1832
+    },
+    {
+      "id": "i-prix",
+      "ok": true,
+      "ms": 1390
+    },
+    {
+      "id": "i-cout",
+      "ok": false,
+      "ms": 879
+    },
+    {
+      "id": "i-stock",
+      "ok": true,
+      "ms": 1732
+    },
+    {
+      "id": "i-achats-frs",
+      "ok": false,
+      "ms": 869
+    },
+    {
+      "id": "i-paiements-client",
+      "ok": true,
+      "ms": 2442
+    },
+    {
+      "id": "i-facture",
+      "ok": true,
+      "ms": 2929
+    },
+    {
+      "id": "i-matricule",
+      "ok": false,
+      "ms": 919
+    },
+    {
+      "id": "i-livrees",
+      "ok": true,
+      "ms": 2376
+    },
+    {
+      "id": "i-annulees",
+      "ok": true,
+      "ms": 1860
+    },
+    {
+      "id": "i-payees",
+      "ok": true,
+      "ms": 1343
+    },
+    {
+      "id": "i-partielles",
+      "ok": false,
+      "ms": 2138
+    },
+    {
+      "id": "i-mobilier",
+      "ok": true,
+      "ms": 2153
+    },
+    {
+      "id": "i-services",
+      "ok": false,
+      "ms": 1684
+    },
+    {
+      "id": "i-cheque",
+      "ok": false,
+      "ms": 2292
+    },
+    {
+      "id": "i-attente",
+      "ok": false,
+      "ms": 1686
+    },
+    {
+      "id": "i-archives",
+      "ok": true,
+      "ms": 1772
+    },
+    {
+      "id": "i-stock-bas",
+      "ok": true,
+      "ms": 1859
+    },
+    {
+      "id": "i-seuil",
+      "ok": true,
+      "ms": 2019
+    },
+    {
+      "id": "i-retard-client",
+      "ok": true,
+      "ms": 2578
+    },
+    {
+      "id": "i-jours-retard",
+      "ok": true,
+      "ms": 2903
+    },
+    {
+      "id": "i-import",
+      "ok": false,
+      "ms": 886
+    },
+    {
+      "id": "i-achats-impayes",
+      "ok": false,
+      "ms": 881
+    },
+    {
+      "id": "i-nb-produits",
+      "ok": true,
+      "ms": 959
+    },
+    {
+      "id": "i-nb-fournisseurs",
+      "ok": false,
+      "ms": 875
+    },
+    {
+      "id": "i-nb-retard",
+      "ok": true,
+      "ms": 1300
+    },
+    {
+      "id": "i-total-paiements",
+      "ok": true,
+      "ms": 1383
+    },
+    {
+      "id": "i-moyenne",
+      "ok": true,
+      "ms": 1092
+    },
+    {
+      "id": "i-max",
+      "ok": true,
+      "ms": 1301
+    },
+    {
+      "id": "i-facture-client",
+      "ok": false,
+      "ms": 1552
+    },
+    {
+      "id": "i-du-client",
+      "ok": true,
+      "ms": 1719
+    },
+    {
+      "id": "i-actifs",
+      "ok": false,
+      "ms": 1722
+    },
+    {
+      "id": "i-prix-moyen",
+      "ok": true,
+      "ms": 1164
+    },
+    {
+      "id": "i-total-achats",
+      "ok": false,
+      "ms": 866
+    },
+    {
+      "id": "i-paye-frs",
+      "ok": false,
+      "ms": 895
+    },
+    {
+      "id": "i-par-statut",
+      "ok": true,
+      "ms": 1159
+    },
+    {
+      "id": "i-reste-par-client",
+      "ok": false,
+      "ms": 1467
+    },
+    {
+      "id": "i-ca-produit",
+      "ok": true,
+      "ms": 1514
+    },
+    {
+      "id": "i-par-categorie",
+      "ok": true,
+      "ms": 1281
+    },
+    {
+      "id": "i-top5",
+      "ok": true,
+      "ms": 1535
+    },
+    {
+      "id": "i-top3-prix",
+      "ok": true,
+      "ms": 1571
+    },
+    {
+      "id": "i-plus-endette",
+      "ok": false,
+      "ms": 1718
+    },
+    {
+      "id": "i-recentes",
+      "ok": false,
+      "ms": 2257
+    },
+    {
+      "id": "i-par-echeance",
+      "ok": true,
+      "ms": 2373
+    },
+    {
+      "id": "i-par-mode",
+      "ok": true,
+      "ms": 1718
+    },
+    {
+      "id": "i-juillet",
+      "ok": true,
+      "ms": 2575
+    },
+    {
+      "id": "i-depuis",
+      "ok": true,
+      "ms": 2529
+    },
+    {
+      "id": "i-paiements-mois",
+      "ok": false,
+      "ms": 1377
+    },
+    {
+      "id": "i-nb-annee",
+      "ok": false,
+      "ms": 1967
+    },
+    {
+      "id": "i-echeance-mois",
+      "ok": false,
+      "ms": 1901
+    },
+    {
+      "id": "i-semestre",
+      "ok": false,
+      "ms": 2699
+    },
+    {
+      "id": "i-et-gamma",
+      "ok": true,
+      "ms": 3168
+    },
+    {
+      "id": "i-ses-commandes",
+      "ok": true,
+      "ms": 2678
+    },
+    {
+      "id": "i-trier",
+      "ok": true,
+      "ms": 2821
+    },
+    {
+      "id": "i-total-tour",
+      "ok": false,
+      "ms": 1540
+    },
+    {
+      "id": "i-autre-categorie",
+      "ok": true,
+      "ms": 2774
+    },
+    {
+      "id": "i-payee-elle",
+      "ok": true,
+      "ms": 2223
+    },
+    {
+      "id": "i-changement-sujet",
+      "ok": true,
+      "ms": 3086
+    },
+    {
+      "id": "i-ecr-ajout",
+      "ok": true,
+      "ms": 1144
+    },
+    {
+      "id": "i-ecr-inscris",
+      "ok": true,
+      "ms": 754
+    },
+    {
+      "id": "i-ecr-adresse",
+      "ok": true,
+      "ms": 754
+    },
+    {
+      "id": "i-ecr-email",
+      "ok": true,
+      "ms": 785
+    },
+    {
+      "id": "i-ecr-delai",
+      "ok": true,
+      "ms": 782
+    },
+    {
+      "id": "i-ecr-archiver",
+      "ok": true,
+      "ms": 743
+    },
+    {
+      "id": "i-ecr-genere",
+      "ok": true,
+      "ms": 770
+    },
+    {
+      "id": "i-ecr-facturer",
+      "ok": true,
+      "ms": 770
+    },
+    {
+      "id": "i-ecr-regle",
+      "ok": true,
+      "ms": 735
+    },
+    {
+      "id": "i-ecr-saisis",
+      "ok": true,
+      "ms": 754
+    },
+    {
+      "id": "i-existe",
+      "ok": true,
+      "ms": 1845
+    },
+    {
+      "id": "i-deja-facturee",
+      "ok": true,
+      "ms": 2369
+    },
+    {
+      "id": "i-a-paye",
+      "ok": true,
+      "ms": 2198
+    },
+    {
+      "id": "i-r-marge",
+      "ok": true,
+      "ms": 871
+    },
+    {
+      "id": "i-r-prevision",
+      "ok": true,
+      "ms": 935
+    },
+    {
+      "id": "i-r-salaires",
+      "ok": true,
+      "ms": 872
+    },
+    {
+      "id": "i-r-efface",
+      "ok": true,
+      "ms": 938
+    },
+    {
+      "id": "i-r-montant",
+      "ok": false,
+      "ms": 708
+    },
+    {
+      "id": "i-r-produit",
+      "ok": false,
+      "ms": 824
+    },
+    {
+      "id": "i-r-mdp",
+      "ok": true,
+      "ms": 880
+    },
+    {
+      "id": "i-r-injection",
+      "ok": true,
+      "ms": 885
+    },
+    {
+      "id": "i-r-meteo",
+      "ok": true,
+      "ms": 877
+    },
+    {
+      "id": "i-d-sales-paiements",
+      "ok": true,
+      "ms": 1216
+    },
+    {
+      "id": "i-d-sales-facturer",
+      "ok": false,
+      "ms": 2916
+    },
+    {
+      "id": "i-d-sales-clients",
+      "ok": true,
+      "ms": 1819
+    },
+    {
+      "id": "i-d-compta-commandes",
+      "ok": false,
+      "ms": 2646
+    },
+    {
+      "id": "i-d-compta-client",
+      "ok": true,
+      "ms": 876
+    },
+    {
+      "id": "i-d-compta-paiement",
+      "ok": true,
+      "ms": 755
+    },
+    {
+      "id": "i-d-admin",
+      "ok": false,
+      "ms": 1753
+    },
+    {
+      "id": "i-c-bonsoir",
+      "ok": false,
+      "ms": 1725
+    },
+    {
+      "id": "i-c-merci",
+      "ok": false,
+      "ms": 2513
+    },
+    {
+      "id": "i-c-aide",
+      "ok": false,
+      "ms": 885
+    },
+    {
+      "id": "i-c-qui",
+      "ok": false,
+      "ms": 875
+    },
+    {
+      "id": "i-f-impayer",
+      "ok": true,
+      "ms": 2055
+    },
+    {
+      "id": "i-f-stok",
+      "ok": true,
+      "ms": 1733
+    },
+    {
+      "id": "i-f-svp",
+      "ok": false,
+      "ms": 907
+    },
+    {
+      "id": "i-f-gama",
+      "ok": true,
+      "ms": 2472
+    },
+    {
+      "id": "i-f-anglais",
+      "ok": true,
+      "ms": 2195
+    },
+    {
+      "id": "i-f-court",
+      "ok": true,
+      "ms": 2121
+    },
+    {
+      "id": "i-f-oral",
+      "ok": true,
+      "ms": 968
+    },
+    {
+      "id": "i-f-majuscules",
+      "ok": false,
+      "ms": 1738
+    }
+  ]
+}
