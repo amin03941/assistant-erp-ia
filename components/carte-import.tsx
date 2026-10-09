@@ -77,6 +77,7 @@ export default function CarteImport({ brouillon, onTermine }: Props) {
         ["échéance", dateFr(facture.date_echeance)],
         ["montant hors taxe", montant(facture.total_ht)],
         ["taxes", montant(facture.total_tva)],
+        ...((facture.timbre_fiscal ?? 0) > 0 ? [["timbre fiscal", montant(facture.timbre_fiscal)] as [string, string]] : []),
         ["total TTC", montant(facture.total_ttc)],
     ];
 
@@ -92,14 +93,14 @@ export default function CarteImport({ brouillon, onTermine }: Props) {
                     <Copy className="mt-0.5 h-4 w-4 shrink-0" />
                     <span>
                         Une facture {doublon.invoice_number} du {doublon.invoice_date} existe déjà pour
-                        ce fournisseur. Rejette cet import s'il s'agit du même document.
+                        ce fournisseur. Rejette cet import s&apos;il s&apos;agit du même document.
                     </span>
                 </p>
             )}
 
             {fournisseur.etat !== "ok" && (
                 <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-                    Le fournisseur n'a pas été identifié. Cette facture ne peut pas être enregistrée
+                    Le fournisseur n&apos;a pas été identifié. Cette facture ne peut pas être enregistrée
                     automatiquement.
                 </p>
             )}
@@ -190,7 +191,7 @@ export default function CarteImport({ brouillon, onTermine }: Props) {
             )}
 
             <p className="mt-3 text-xs text-slate-500">
-                Aucune facture n'est créée tant que tu n'as pas validé.
+                Aucune facture n&apos;est créée tant que tu n&apos;as pas validé.
             </p>
         </div>
     );

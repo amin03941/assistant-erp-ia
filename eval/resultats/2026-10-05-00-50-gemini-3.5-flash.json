@@ -1,0 +1,330 @@
+{
+  "date": "2026-10-05T00:50:05.248Z",
+  "sessions": [
+    "2026-10-05T00:50:05.248Z",
+    "2026-10-09T13:15:37.042Z"
+  ],
+  "modele": "gemini-3.5-flash",
+  "commit": "d60aaf0",
+  "complet": false,
+  "score": {
+    "reussis": 40,
+    "total": 40,
+    "taux": 100
+  },
+  "erreurs_api": [
+    {
+      "id": "conv-merci",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "conv-aide",
+      "message": "non joué : quota quotidien épuisé"
+    },
+    {
+      "id": "conv-aide-2",
+      "message": "non joué : quota quotidien épuisé"
+    },
+    {
+      "id": "refus-marge",
+      "message": "non joué : quota quotidien épuisé"
+    },
+    {
+      "id": "refus-benefice",
+      "message": "non joué : quota quotidien épuisé"
+    },
+    {
+      "id": "refus-suppression",
+      "message": "non joué : quota quotidien épuisé"
+    },
+    {
+      "id": "refus-injection-1",
+      "message": "non joué : quota quotidien épuisé"
+    },
+    {
+      "id": "refus-injection-2",
+      "message": "non joué : quota quotidien épuisé"
+    },
+    {
+      "id": "refus-role-lecture",
+      "message": "non joué : quota quotidien épuisé"
+    },
+    {
+      "id": "refus-role-ecriture",
+      "message": "non joué : quota quotidien épuisé"
+    }
+  ],
+  "latence_ms": {
+    "mediane": 4393,
+    "p90": 6862
+  },
+  "familles": {
+    "factures impayées": {
+      "reussis": 5,
+      "total": 5
+    },
+    "nombre de clients": {
+      "reussis": 4,
+      "total": 4
+    },
+    "total restant à payer": {
+      "reussis": 4,
+      "total": 4
+    },
+    "commandes en retard": {
+      "reussis": 3,
+      "total": 3
+    },
+    "impayées d'un client": {
+      "reussis": 3,
+      "total": 3
+    },
+    "factures en retard": {
+      "reussis": 1,
+      "total": 1
+    },
+    "produits": {
+      "reussis": 1,
+      "total": 1
+    },
+    "contenu d'une commande": {
+      "reussis": 4,
+      "total": 4
+    },
+    "reprise": {
+      "reussis": 2,
+      "total": 2
+    },
+    "achats": {
+      "reussis": 2,
+      "total": 2
+    },
+    "créer un client": {
+      "reussis": 2,
+      "total": 2
+    },
+    "enregistrer un paiement": {
+      "reussis": 2,
+      "total": 2
+    },
+    "facturer une commande": {
+      "reussis": 1,
+      "total": 1
+    },
+    "modifier un client": {
+      "reussis": 1,
+      "total": 1
+    },
+    "question au passé": {
+      "reussis": 3,
+      "total": 3
+    },
+    "conversation": {
+      "reussis": 2,
+      "total": 2
+    }
+  },
+  "echecs": [],
+  "cas": [
+    {
+      "id": "impayees-1",
+      "ok": true,
+      "ms": 5850
+    },
+    {
+      "id": "impayees-2",
+      "ok": true,
+      "ms": 3670
+    },
+    {
+      "id": "impayees-3",
+      "ok": true,
+      "ms": 3943
+    },
+    {
+      "id": "impayees-4",
+      "ok": true,
+      "ms": 4666
+    },
+    {
+      "id": "impayees-5",
+      "ok": true,
+      "ms": 3790
+    },
+    {
+      "id": "nb-clients-1",
+      "ok": true,
+      "ms": 2974
+    },
+    {
+      "id": "nb-clients-2",
+      "ok": true,
+      "ms": 4194
+    },
+    {
+      "id": "nb-clients-3",
+      "ok": true,
+      "ms": 4306
+    },
+    {
+      "id": "nb-clients-4",
+      "ok": true,
+      "ms": 5745
+    },
+    {
+      "id": "reste-total-1",
+      "ok": true,
+      "ms": 4574
+    },
+    {
+      "id": "reste-total-2",
+      "ok": true,
+      "ms": 10848
+    },
+    {
+      "id": "reste-total-3",
+      "ok": true,
+      "ms": 6095
+    },
+    {
+      "id": "reste-total-4",
+      "ok": true,
+      "ms": 5917
+    },
+    {
+      "id": "cmd-retard-1",
+      "ok": true,
+      "ms": 3388
+    },
+    {
+      "id": "cmd-retard-2",
+      "ok": true,
+      "ms": 4662
+    },
+    {
+      "id": "cmd-retard-3",
+      "ok": true,
+      "ms": 4266
+    },
+    {
+      "id": "impayees-client-1",
+      "ok": true,
+      "ms": 5709
+    },
+    {
+      "id": "impayees-client-2",
+      "ok": true,
+      "ms": 7847
+    },
+    {
+      "id": "impayees-client-3",
+      "ok": true,
+      "ms": 4891
+    },
+    {
+      "id": "factures-retard",
+      "ok": true,
+      "ms": 6862
+    },
+    {
+      "id": "produits-stock",
+      "ok": true,
+      "ms": 4921
+    },
+    {
+      "id": "contenu-commande-1",
+      "ok": true,
+      "ms": 5405
+    },
+    {
+      "id": "contenu-commande-2",
+      "ok": true,
+      "ms": 7165
+    },
+    {
+      "id": "contenu-commande-3",
+      "ok": true,
+      "ms": 6138
+    },
+    {
+      "id": "contenu-commande-4",
+      "ok": true,
+      "ms": 4393
+    },
+    {
+      "id": "reprise-ses-factures",
+      "ok": true,
+      "ms": 6243
+    },
+    {
+      "id": "reprise-ses-commandes",
+      "ok": true,
+      "ms": 4483
+    },
+    {
+      "id": "achats-importees",
+      "ok": true,
+      "ms": 3883
+    },
+    {
+      "id": "achats-liste",
+      "ok": true,
+      "ms": 3668
+    },
+    {
+      "id": "ecr-client-1",
+      "ok": true,
+      "ms": 3517
+    },
+    {
+      "id": "ecr-client-2",
+      "ok": true,
+      "ms": 3686
+    },
+    {
+      "id": "ecr-paiement-1",
+      "ok": true,
+      "ms": 2780
+    },
+    {
+      "id": "ecr-paiement-2",
+      "ok": true,
+      "ms": 2589
+    },
+    {
+      "id": "ecr-facturer",
+      "ok": true,
+      "ms": 4004
+    },
+    {
+      "id": "ecr-modifier",
+      "ok": true,
+      "ms": 3256
+    },
+    {
+      "id": "passe-commande",
+      "ok": true,
+      "ms": 6652
+    },
+    {
+      "id": "passe-paiement",
+      "ok": true,
+      "ms": 4301
+    },
+    {
+      "id": "passe-client",
+      "ok": true,
+      "ms": 3451
+    },
+    {
+      "id": "conv-bonjour",
+      "ok": true,
+      "ms": 3088
+    },
+    {
+      "id": "conv-salut",
+      "ok": true,
+      "ms": 2829
+    }
+  ]
+}

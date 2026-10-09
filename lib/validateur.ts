@@ -8,6 +8,27 @@ const LIMITE_MAX = 200;
 
 export class ErreurValidation extends Error { }
 
+/**
+ * La valeur a-t-elle la forme qu'attend le type de la colonne, tel que le
+ * catalogue le déclare ? Une valeur mal formée — « 1er du mois » pour une
+ * date — devient un refus explicite au lieu d'une erreur de PostgreSQL.
+ */
+function conforme(type: string, x: unknown): boolean {
+    switch (type) {
+        case "date":
+            return typeof x === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x) && !Number.isNaN(Date.parse(x));
+        case "montant":
+        case "nombre":
+        case "duree":
+            return (typeof x === "number" && Number.isFinite(x))
+                || (typeof x === "string" && /^-?\d+(\.\d+)?$/.test(x.trim()));
+        case "booleen":
+            return typeof x === "boolean" || x === "true" || x === "false";
+        default:
+            return typeof x === "string" || (typeof x === "number" && Number.isFinite(x));
+    }
+}
+
 export function construireRequete(spec: any, role: string) {
     // 1. La vue existe-t-elle, et ce rôle y a-t-il droit ?
     const vue = CATALOGUE[spec.view];
@@ -19,10 +40,20 @@ export function construireRequete(spec: any, role: string) {
         return c;
     };
 
-    const valeurValide = (v: any) => {
-        const ok = (x: any) => ["string", "number", "boolean"].includes(typeof x);
-        if (Array.isArray(v) ? v.every(ok) : ok(v)) return v;
-        throw new ErreurValidation(`Valeur de filtre invalide : ${JSON.stringify(v)}`);
+    const valeurValide = (colonne: string, op: string, v: unknown) => {
+        const c = vue.colonnes[colonne];
+        if (op === "IN") {
+            if (Array.isArray(v) && v.length === 0) throw new ErreurValidation(`Aucune valeur donnée pour « ${c.libelle} ».`);
+        } else if (Array.isArray(v)) {
+            throw new ErreurValidation(`Une seule valeur est attendue pour « ${c.libelle} ».`);
+        }
+        if (op === "ILIKE" && c.type !== "texte") {
+            throw new ErreurValidation(`La recherche partielle ne s'applique qu'à du texte, pas à « ${c.libelle} ».`);
+        }
+        for (const x of Array.isArray(v) ? v : [v]) {
+            if (!conforme(c.type, x)) throw new ErreurValidation(`Valeur invalide pour « ${c.libelle} » : « ${String(x)} ».`);
+        }
+        return v;
     };
 
     const params: any[] = [];
@@ -33,6 +64,12 @@ export function construireRequete(spec: any, role: string) {
         const fn = String(spec.aggregate.fn).toLowerCase();
         if (!FONCTIONS.includes(fn)) throw new ErreurValidation(`Fonction interdite : ${fn}`);
         const champ = fn === "count" ? "*" : colonneValide(spec.aggregate.field);
+        const col = vue.colonnes[spec.aggregate.field];
+        if (fn === "sum" && col?.additif === false) {
+            throw new ErreurValidation(
+                `Additionner des « ${col.libelle} » n'a pas de sens. Demandez plutôt une moyenne, un minimum ou un maximum.`,
+            );
+        }
         const groupes = (spec.group_by ?? []).map(colonneValide);
         const projection = [...groupes, `${fn}(${champ}) AS resultat`].join(", ");
         sql = `SELECT ${projection} FROM ${spec.view}`;
@@ -44,26 +81,30 @@ export function construireRequete(spec: any, role: string) {
     }
 
     // 3. Filtres — les valeurs partent en paramètres, jamais dans le texte SQL
+    const conditions: string[] = [];
     for (const f of spec.filters ?? []) {
         const col = colonneValide(f.field);
         const op = OPERATEURS[f.op];
         if (!op) throw new ErreurValidation(`Opérateur interdit : ${f.op}`);
-        const valeur = valeurValide(f.value);
+        const valeur = valeurValide(col, op, f.value);
 
-        sql += params.length === 0 ? " WHERE " : " AND ";
         if (op === "IN") {
             const valeurs = (Array.isArray(valeur) ? valeur : [valeur])
-                .map((v: any) => { params.push(v); return `$${params.length}`; });
-            sql += `${col} IN (${valeurs.join(", ")})`;
+                .map((v: unknown) => { params.push(v); return `$${params.length}`; });
+            conditions.push(`${col} IN (${valeurs.join(", ")})`);
         } else {
             params.push(op === "ILIKE" ? `%${valeur}%` : valeur);
-            sql += `${col} ${op} $${params.length}`;
+            conditions.push(`${col} ${op} $${params.length}`);
         }
     }
+    if (conditions.length) sql += ` WHERE ${conditions.join(" AND ")}`;
 
     if (spec._groupes?.length) sql += ` GROUP BY ${spec._groupes.join(", ")}`;
 
-    // 4. Tri
+    // 4. Tri — une série se lit dans l'ordre du temps quand rien d'autre n'est demandé.
+    if (!spec.order_by && !spec.aggregate && vue.serie) {
+        sql += ` ORDER BY ${vue.serie} ASC`;
+    }
     if (spec.order_by) {
         const col = spec.aggregate && spec.order_by.field === "resultat"
             ? "resultat"

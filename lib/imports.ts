@@ -12,6 +12,10 @@ import type { PieceStockee } from "@/lib/stockage";
  * vérification humaine, comme la carte de confirmation du chemin d'écriture.
  */
 
+/** Une facture fournisseur est une pièce comptable : mêmes rôles que la
+ *  facturation et les paiements. Le commercial n'y a pas accès. */
+export const ROLES_IMPORT: readonly string[] = ["ACCOUNTANT", "MANAGER"];
+
 export const STATUT_A_VERIFIER = "NEEDS_REVIEW";
 export const STATUT_DOUBLON = "DUPLICATE";
 
@@ -146,15 +150,23 @@ export async function creerFactureAchat(
 
     const ht = f.total_ht ?? 0;
     const tva = f.total_tva ?? 0;
-    const ttc = f.total_ttc ?? ht + tva;
+    // Brouillons antérieurs au timbre : le champ manque, il vaut zéro.
+    const timbre = f.timbre_fiscal ?? 0;
+    const ttc = f.total_ttc ?? ht + tva + timbre;
+
+    // Le timbre n'a pas de colonne dédiée : il est compris dans le TTC et noté
+    // sur la facture, ce qui garde l'écart TTC − (HT + TVA) explicable.
+    const notes = timbre > 0
+        ? `Timbre fiscal : ${timbre.toLocaleString("fr-FR", { minimumFractionDigits: 3, maximumFractionDigits: 3 })} TND`
+        : null;
 
     const { rows: fac } = await cx.query<{ id: string }>(
         `INSERT INTO purchase_invoices
            (invoice_number, supplier_id, invoice_date, due_date, status,
-            subtotal_amount, tax_amount, total_amount, paid_amount, source)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, $9)
+            subtotal_amount, tax_amount, total_amount, paid_amount, source, notes)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, $9, $10)
          RETURNING id`,
-        [f.numero, fournisseurId, f.date_facture, echeance, STATUT_FACTURE, ht, tva, ttc, SOURCE_FACTURE],
+        [f.numero, fournisseurId, f.date_facture, echeance, STATUT_FACTURE, ht, tva, ttc, SOURCE_FACTURE, notes],
     );
 
     for (const l of lignes) {

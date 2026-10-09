@@ -36,12 +36,13 @@ export const SCHEMA_FACTURE = {
         total_ht: { type: "string" },
         total_tva: { type: "string" },
         total_ttc: { type: "string" },
+        timbre_fiscal: { type: "string" },
         lignes: { type: "array", items: LIGNE },
     },
     required: [
         "numero", "date_facture", "date_echeance",
         "fournisseur_nom", "fournisseur_matricule", "destinataire_nom",
-        "total_ht", "total_tva", "total_ttc", "lignes",
+        "total_ht", "total_tva", "total_ttc", "timbre_fiscal", "lignes",
     ],
 } as const;
 
@@ -55,6 +56,7 @@ export type FactureBrute = {
     total_ht?: string;
     total_tva?: string;
     total_ttc?: string;
+    timbre_fiscal?: string;
     lignes?: {
         reference?: string;
         designation?: string;
@@ -78,6 +80,8 @@ RÈGLES
   et les virgules : « 7 475,000 » se recopie « 7 475,000 », jamais 7475000.
   Les montants et les dates sont convertis par le backend.
 - Un champ absent de la facture vaut "". N'invente aucune valeur et ne calcule rien.
+- timbre_fiscal : le montant du droit de timbre s'il figure sur la facture
+  (« Timbre fiscal : 1,000 »), "" sinon.
 - Reprends toutes les lignes du tableau, dans l'ordre, sans en omettre.`;
 
 export async function extraireFacture(imageBase64: string): Promise<FactureBrute | null> {
@@ -97,6 +101,8 @@ export type FactureNormalisee = {
     total_ht: number | null;
     total_tva: number | null;
     total_ttc: number | null;
+    /** Droit de timbre, fréquent sur les factures tunisiennes : TTC = HT + TVA + timbre. */
+    timbre_fiscal: number | null;
     lignes: {
         reference: string;
         designation: string;
@@ -125,6 +131,7 @@ export function normaliserFacture(b: FactureBrute): FactureNormalisee {
         total_ht: nombreSeul(b.total_ht ?? ""),
         total_tva: nombreSeul(b.total_tva ?? ""),
         total_ttc: nombreSeul(b.total_ttc ?? ""),
+        timbre_fiscal: nombreSeul(b.timbre_fiscal ?? ""),
         lignes: (b.lignes ?? []).map((l) => ({
             reference: (l.reference ?? "").trim(),
             designation: (l.designation ?? "").trim(),
@@ -151,11 +158,15 @@ export function controler(f: FactureNormalisee): Anomalie[] {
     if (!f.date_facture) a.push({ champ: "date_facture", message: "Date de facture illisible." });
     if (f.total_ttc === null) a.push({ champ: "total_ttc", message: "Total TTC illisible." });
 
+    // Le timbre fiscal s'ajoute au TTC : sans lui, une facture tunisienne
+    // parfaitement juste était signalée comme incohérente.
+    const timbre = f.timbre_fiscal ?? 0;
     if (f.total_ht !== null && f.total_tva !== null && f.total_ttc !== null) {
-        if (!proche(f.total_ht + f.total_tva, f.total_ttc)) {
+        if (!proche(f.total_ht + f.total_tva + timbre, f.total_ttc)) {
+            const libelle = timbre ? "HT + TVA + timbre" : "HT + TVA";
             a.push({
                 champ: "total_ttc",
-                message: `HT + TVA (${(f.total_ht + f.total_tva).toFixed(3)}) ne correspond pas au TTC lu (${f.total_ttc.toFixed(3)}).`,
+                message: `${libelle} (${(f.total_ht + f.total_tva + timbre).toFixed(3)}) ne correspond pas au TTC lu (${f.total_ttc.toFixed(3)}).`,
             });
         }
     }

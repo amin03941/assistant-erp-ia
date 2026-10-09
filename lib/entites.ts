@@ -27,6 +27,7 @@ import { CATALOGUE } from "./catalogue";
 
 type Entite = {
     libelle: string;
+    genre: "m" | "f";
     /** Vue interrogée pour résoudre. Une vue, donc les droits s'appliquent. */
     vue: string;
     /** Colonne identifiante dans cette vue. */
@@ -36,10 +37,11 @@ type Entite = {
 };
 
 export const ENTITES: Record<string, Entite> = {
-    client: { libelle: "client", vue: "v_customers", cle: "reference", nom: "name" },
-    produit: { libelle: "produit", vue: "v_products", cle: "reference", nom: "name" },
-    facture: { libelle: "facture", vue: "v_sales_invoices", cle: "invoice_number", nom: "invoice_number" },
-    commande: { libelle: "commande", vue: "v_sales_orders", cle: "reference", nom: "reference" },
+    client: { libelle: "client", genre: "m", vue: "v_customers", cle: "reference", nom: "name" },
+    produit: { libelle: "produit", genre: "m", vue: "v_products", cle: "reference", nom: "name" },
+    facture: { libelle: "facture", genre: "f", vue: "v_sales_invoices", cle: "invoice_number", nom: "invoice_number" },
+    commande: { libelle: "commande", genre: "f", vue: "v_sales_orders", cle: "reference", nom: "reference" },
+    fournisseur: { libelle: "fournisseur", genre: "m", vue: "v_suppliers", cle: "reference", nom: "name" },
 };
 
 type Marque = { entite: string; role: "cle" | "nom" };
@@ -62,6 +64,12 @@ export const COLONNES_ENTITE: Record<string, Record<string, Marque>> = {
         customer_reference: { entite: "client", role: "cle" },
         customer_name: { entite: "client", role: "nom" },
     },
+    v_sales_order_items: {
+        order_reference: { entite: "commande", role: "cle" },
+        product_reference: { entite: "produit", role: "cle" },
+        product_name: { entite: "produit", role: "nom" },
+        customer_name: { entite: "client", role: "nom" },
+    },
     v_sales_invoices: {
         invoice_number: { entite: "facture", role: "cle" },
         order_reference: { entite: "commande", role: "cle" },
@@ -77,6 +85,14 @@ export const COLONNES_ENTITE: Record<string, Record<string, Marque>> = {
     v_customer_payments: {
         invoice_number: { entite: "facture", role: "cle" },
         customer_name: { entite: "client", role: "nom" },
+    },
+    v_suppliers: {
+        reference: { entite: "fournisseur", role: "cle" },
+        name: { entite: "fournisseur", role: "nom" },
+    },
+    v_purchase_invoices: {
+        supplier_reference: { entite: "fournisseur", role: "cle" },
+        supplier_name: { entite: "fournisseur", role: "nom" },
     },
 };
 
@@ -167,6 +183,35 @@ async function chercher(cx: Interrogeable, e: Entite, saisie: string): Promise<T
     return { etat: "ambigu", choix: rows };
 }
 
+/**
+ * La valeur est-elle exactement l'identifiant d'une AUTRE entité ?
+ *
+ * « donner les produits de cette commande » : le modèle choisit les lignes de
+ * facture et range CMD-2026-0031 dans invoice_number, faute de colonne
+ * commande. Chercher une facture nommée CMD-… ne mène à rien ; reconnaître
+ * une commande permet soit de déplacer le filtre, soit de dire pourquoi la vue
+ * ne peut pas répondre — au lieu de proposer cinq factures sans rapport.
+ */
+async function reconnaitreAilleurs(
+    cx: Interrogeable,
+    exclue: string,
+    saisie: string,
+    role: string,
+): Promise<{ entite: string; cle: string; nom: string } | null> {
+    for (const [nom, e] of Object.entries(ENTITES)) {
+        if (nom === exclue || !lisible(e.vue, role)) continue;
+        const { rows } = await cx.query(
+            `SELECT ${e.cle} AS cle, ${e.nom} AS nom FROM ${e.vue} WHERE ${e.cle} ILIKE $1 LIMIT 2`,
+            [saisie.trim()],
+        );
+        if (rows.length === 1) return { entite: nom, cle: rows[0].cle, nom: rows[0].nom };
+    }
+    return null;
+}
+
+const aucun = (e: Entite) => (e.genre === "f" ? "Aucune" : "Aucun");
+const lequel = (e: Entite) => (e.genre === "f" ? "Laquelle" : "Lequel");
+
 // ---------------------------------------------------------------------------
 // Résolution de tous les filtres d'une spécification
 // ---------------------------------------------------------------------------
@@ -206,9 +251,26 @@ export async function resoudreFiltres(
         const r = await chercher(cx, e, valeurTexte);
 
         if (r.etat === "introuvable") {
+            const autre = await reconnaitreAilleurs(cx, marque.entite, valeurTexte, role);
+            if (autre) {
+                const cible = colonnePour(vue, autre.entite);
+                const ea = ENTITES[autre.entite];
+                if (!cible) {
+                    const lignes = CATALOGUE[vue]?.entite.pluriel ?? "données";
+                    return {
+                        etat: "introuvable",
+                        message: `« ${valeurTexte} » est ${ea.genre === "f" ? "une" : "un"} ${ea.libelle} : `
+                            + `les ${lignes} ne peuvent pas être filtrées par ${ea.libelle}.`,
+                        choix: [],
+                    };
+                }
+                sujets[autre.entite] = { cle: autre.cle, nom: autre.nom };
+                sortie.push({ field: cible.colonne, op: "eq", value: cible.role === "cle" ? autre.cle : autre.nom });
+                continue;
+            }
             return {
                 etat: "introuvable",
-                message: `Aucun ${e.libelle} ne correspond à « ${valeurTexte} ».`,
+                message: `${aucun(e)} ${e.libelle} ne correspond à « ${valeurTexte} ».`,
                 choix: r.suggestions.map((s) => (s.cle === s.nom ? s.cle : `${s.cle} — ${s.nom}`)),
             };
         }
@@ -216,7 +278,7 @@ export async function resoudreFiltres(
         if (r.etat === "ambigu") {
             return {
                 etat: "ambigu",
-                message: `Plusieurs ${e.libelle}s correspondent à « ${valeurTexte} ». Lequel ?`,
+                message: `Plusieurs ${e.libelle}s correspondent à « ${valeurTexte} ». ${lequel(e)} ?`,
                 choix: r.choix.map((s) => (s.cle === s.nom ? s.cle : `${s.cle} — ${s.nom}`)),
             };
         }
@@ -241,11 +303,19 @@ export async function resoudreFiltres(
 // ---------------------------------------------------------------------------
 
 /**
- * Marques anaphoriques : la question reprend une entité sans la nommer.
- * Règle linguistique, valable pour toute vue et toute entité.
+ * Reprises certaines, reconnaissables par la grammaire seule : un démonstratif
+ * suivi d'un nom d'entité (« cette commande », « ces factures ») ou un
+ * possessif (« ses », « sa », « leurs »). Le modèle signale les reprises plus
+ * subtiles (« le même client », « pour lui ») ; ce filet couvre les cas où il
+ * l'oublie. Les noms viennent des entités déclarées : « de cette année » n'est
+ * pas une reprise, « année » n'étant pas une entité.
  */
-const REPRISE =
-    /\b(ses|sa|son|leur|leurs|celui|celle|ceux|celles|ce client|cette societe|cette société|le m[êe]me|la m[êe]me|idem|pour lui|pour elle|de ce|de cette)\b/i;
+export function repriseExplicite(question: string): boolean {
+    const q = aplatir(question);
+    const noms = Object.values(ENTITES).map((e) => aplatir(e.libelle)).join("|");
+    return new RegExp(`\\b(ce|cet|cette|ces) (${noms})s?\\b`).test(q)
+        || /\b(ses|sa|son|leur|leurs)\b/.test(q);
+}
 
 /** Le sujet retenu au dernier tour utile, s'il y en a un. */
 export function sujetsPrecedents(tours: { query_spec?: any }[]): Sujets {
@@ -259,22 +329,31 @@ export function sujetsPrecedents(tours: { query_spec?: any }[]): Sujets {
 /**
  * Ajoute au besoin le filtre correspondant au sujet en cours.
  *
- * Appliqué par le code et non par le modèle : « ses factures » est une reprise
- * grammaticale, pas une décision métier. Le filtre n'est ajouté que si la
- * question reprend sans nommer ET que la vue ne porte encore aucun filtre sur
- * cette entité.
+ * Le partage des rôles : RECONNAÎTRE une reprise est une affaire de
+ * compréhension, c'est le modèle qui la signale (`reprise`). Une liste de
+ * mots s'y trompait — « de cette » faisait de « les factures de cette année »
+ * une reprise du client précédent. APPLIQUER la reprise est une affaire
+ * exacte : le code choisit la colonne et la valeur. Le filtre n'est ajouté
+ * que si la vue ne porte encore aucun filtre sur cette entité.
  */
 export function reporterSujet(
-    question: string,
+    reprise: boolean,
     vue: string,
     filtres: Filtre[],
     sujets: Sujets,
 ): { filtres: Filtre[]; sujets: Sujets; applique: string | null } {
-    if (!REPRISE.test(question)) return { filtres, sujets: {}, applique: null };
+    if (!reprise) return { filtres, sujets: {}, applique: null };
 
     const dejaFiltrees = new Set(
         filtres.map((f) => COLONNES_ENTITE[vue]?.[f.field]?.entite).filter(Boolean) as string[],
     );
+
+    // Tous les sujets du tour précédent sont reportés, pas seulement le premier :
+    // ils ont été appliqués ensemble, donc ils sont cohérents. Ne garder que le
+    // client faisait perdre la commande dans « les produits de cette commande ».
+    const ajoutes: Filtre[] = [];
+    const reportes: Sujets = {};
+    const libelles: string[] = [];
 
     for (const [entite, valeur] of Object.entries(sujets)) {
         if (dejaFiltrees.has(entite)) continue;
@@ -282,12 +361,11 @@ export function reporterSujet(
         const cible = colonnePour(vue, entite);
         if (!cible) continue;
 
-        return {
-            filtres: [...filtres, { field: cible.colonne, op: "eq", value: cible.role === "cle" ? valeur.cle : valeur.nom }],
-            sujets: { [entite]: valeur },
-            applique: `${ENTITES[entite]?.libelle ?? entite} ${valeur.nom}`,
-        };
+        ajoutes.push({ field: cible.colonne, op: "eq", value: cible.role === "cle" ? valeur.cle : valeur.nom });
+        reportes[entite] = valeur;
+        libelles.push(`${ENTITES[entite]?.libelle ?? entite} ${valeur.nom}`);
     }
 
-    return { filtres, sujets: {}, applique: null };
+    if (ajoutes.length === 0) return { filtres, sujets: {}, applique: null };
+    return { filtres: [...filtres, ...ajoutes], sujets: reportes, applique: libelles.join(", ") };
 }

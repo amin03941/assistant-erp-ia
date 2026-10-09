@@ -10,11 +10,7 @@ import {
     rapprocherLignes,
     chercherDoublon,
 } from "@/lib/ocr";
-import { enregistrerBrouillon, pieceDejaImportee, STATUT_A_VERIFIER, STATUT_DOUBLON } from "@/lib/imports";
-
-/** Une facture fournisseur est une pièce comptable : mêmes rôles que la
- *  facturation et les paiements. Le commercial n'y a pas accès. */
-const ROLES_IMPORT = ["ACCOUNTANT", "MANAGER"];
+import { enregistrerBrouillon, pieceDejaImportee, ROLES_IMPORT, STATUT_A_VERIFIER, STATUT_DOUBLON } from "@/lib/imports";
 
 export async function POST(req: Request) {
     let session;

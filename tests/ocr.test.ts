@@ -144,3 +144,22 @@ describe("controler", () => {
         expect(a[0].champ).toBe("lignes[0]");
     });
 });
+
+describe("timbre fiscal", () => {
+    it("accepte une facture tunisienne dont le TTC comprend le timbre", () => {
+        const f = normaliserFacture(factureValide({ timbre_fiscal: "1,000", total_ttc: "8 896,250" }));
+        expect(f.timbre_fiscal).toBe(1);
+        expect(controler(f)).toEqual([]);
+    });
+
+    it("signale toujours un TTC faux, en citant le timbre dans le calcul", () => {
+        const a = controler(normaliserFacture(factureValide({ timbre_fiscal: "1,000", total_ttc: "8 900,000" })));
+        expect(a.find((x) => x.champ === "total_ttc")?.message).toContain("HT + TVA + timbre (8896.250)");
+    });
+
+    it("compte un timbre absent pour zéro", () => {
+        const f = normaliserFacture(factureValide({ timbre_fiscal: "" }));
+        expect(f.timbre_fiscal).toBeNull();
+        expect(controler(f)).toEqual([]);
+    });
+});

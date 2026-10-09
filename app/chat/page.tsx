@@ -10,7 +10,7 @@ export default async function ChatPage() {
     return (
         <ConversationProvider>
             <div className="flex h-screen bg-[#F7F8FC] text-[#1B1F32]">
-                <Sidebar nom={session.nom} role={session.role}>
+                <Sidebar nom={session.nom} role={session.role} actif="assistant">
                     <Historique />
                 </Sidebar>
                 <ChatArea nom={session.nom} role={session.role} />

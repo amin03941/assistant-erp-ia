@@ -371,13 +371,17 @@ export async function traiterEcriture(opts: {
                 if (action.apercu) supplement = await action.apercu(cx, r.cle);
             } else {
                 cle = undefined;
+                // La saisie n'est citée que si elle est courte : le modèle recopie
+                // parfois toute la phrase comme désignation de la cible.
+                const saisie = prep.cible.length <= 40 ? ` à « ${prep.cible} »` : "";
+                const lequel = action.cible.genre === "f" ? "Laquelle" : "Lequel";
                 manquants.unshift({
                     colonne: "__cible__",
                     libelle: action.cible.libelle,
                     invite:
                         r.etat === "ambigu"
-                            ? `Plusieurs ${action.cible.libelle}s correspondent à « ${prep.cible} ». Laquelle ?`
-                            : `Aucune correspondance pour ${action.cible.libelle} « ${prep.cible} ». Voici celles qui sont disponibles :`,
+                            ? `Plusieurs ${action.cible.libelle}s correspondent${saisie}. ${lequel} ?`
+                            : `Aucune correspondance pour ${action.cible.libelle}${saisie ? ` « ${prep.cible} »` : ""}. Voici les choix disponibles :`,
                 });
                 // .affichage seul : pour facture et commande il porte déjà la clé en
                 // tête (« FAC-... — client — ... »), la faire précéder à nouveau la

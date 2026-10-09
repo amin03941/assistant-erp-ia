@@ -105,7 +105,7 @@ export default function CarteAction({ confirmation, onTermine }: Props) {
             )}
 
             <p className="mt-3 text-xs text-slate-500">
-                Aucune donnée n'est modifiée tant que tu n'as pas confirmé.
+                Aucune donnée n&apos;est modifiée tant que tu n&apos;as pas confirmé.
             </p>
         </div>
     );

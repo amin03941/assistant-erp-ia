@@ -1,0 +1,262 @@
+{
+  "date": "2026-10-05T01:05:37.862Z",
+  "modele": "gemini-3.6-flash",
+  "commit": "inconnu",
+  "score": {
+    "reussis": 19,
+    "total": 19,
+    "taux": 100
+  },
+  "erreurs_api": [
+    {
+      "id": "factures-retard",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "produits-stock",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "contenu-commande-1",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "contenu-commande-2",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "contenu-commande-3",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "contenu-commande-4",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "reprise-ses-factures",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "reprise-ses-commandes",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "achats-importees",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "achats-liste",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "ecr-client-1",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "ecr-client-2",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "ecr-paiement-1",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "ecr-paiement-2",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "ecr-facturer",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "ecr-modifier",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "passe-commande",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "passe-paiement",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "passe-client",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "conv-bonjour",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "conv-salut",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "conv-merci",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "conv-aide",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "conv-aide-2",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "refus-marge",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "refus-benefice",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "refus-suppression",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "refus-injection-1",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "refus-injection-2",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "refus-role-lecture",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    },
+    {
+      "id": "refus-role-ecriture",
+      "message": "{\"error\":{\"code\":429,\"message\":\"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-lim"
+    }
+  ],
+  "latence_ms": {
+    "mediane": 5810,
+    "p90": 9014
+  },
+  "familles": {
+    "factures impayées": {
+      "reussis": 5,
+      "total": 5
+    },
+    "nombre de clients": {
+      "reussis": 4,
+      "total": 4
+    },
+    "total restant à payer": {
+      "reussis": 4,
+      "total": 4
+    },
+    "commandes en retard": {
+      "reussis": 3,
+      "total": 3
+    },
+    "impayées d'un client": {
+      "reussis": 3,
+      "total": 3
+    }
+  },
+  "echecs": [],
+  "cas": [
+    {
+      "id": "impayees-1",
+      "ok": true,
+      "ms": 5537
+    },
+    {
+      "id": "impayees-2",
+      "ok": true,
+      "ms": 6828
+    },
+    {
+      "id": "impayees-3",
+      "ok": true,
+      "ms": 6773
+    },
+    {
+      "id": "impayees-4",
+      "ok": true,
+      "ms": 4191
+    },
+    {
+      "id": "impayees-5",
+      "ok": true,
+      "ms": 4291
+    },
+    {
+      "id": "nb-clients-1",
+      "ok": true,
+      "ms": 5810
+    },
+    {
+      "id": "nb-clients-2",
+      "ok": true,
+      "ms": 4705
+    },
+    {
+      "id": "nb-clients-3",
+      "ok": true,
+      "ms": 4226
+    },
+    {
+      "id": "nb-clients-4",
+      "ok": true,
+      "ms": 4308
+    },
+    {
+      "id": "reste-total-1",
+      "ok": true,
+      "ms": 6112
+    },
+    {
+      "id": "reste-total-2",
+      "ok": true,
+      "ms": 5079
+    },
+    {
+      "id": "reste-total-3",
+      "ok": true,
+      "ms": 9254
+    },
+    {
+      "id": "reste-total-4",
+      "ok": true,
+      "ms": 6022
+    },
+    {
+      "id": "cmd-retard-1",
+      "ok": true,
+      "ms": 4195
+    },
+    {
+      "id": "cmd-retard-2",
+      "ok": true,
+      "ms": 6033
+    },
+    {
+      "id": "cmd-retard-3",
+      "ok": true,
+      "ms": 5217
+    },
+    {
+      "id": "impayees-client-1",
+      "ok": true,
+      "ms": 6026
+    },
+    {
+      "id": "impayees-client-2",
+      "ok": true,
+      "ms": 5935
+    },
+    {
+      "id": "impayees-client-3",
+      "ok": true,
+      "ms": 9014
+    }
+  ],
+  "complet": false,
+  "note": "Exécution partielle : quota gratuit de 20 requêtes par jour atteint."
+}

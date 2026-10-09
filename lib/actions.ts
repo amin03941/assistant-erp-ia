@@ -1,3 +1,4 @@
+import { lireDate } from "./periodes";
 import type { PoolClient } from "pg";
 
 /**
@@ -76,6 +77,8 @@ export type Champ = {
  */
 type Cible = {
     libelle: string;
+    /** Genre du libellé, pour accorder les questions (« Lequel ? », « Laquelle ? »). */
+    genre: "m" | "f";
     invite: string;
     /** Comment l'utilisateur désigne cette cible en pratique. Injecté dans le
      *  prompt : le modèle ne peut pas deviner que le nom d'un client suffit à
@@ -128,6 +131,7 @@ export type Action = {
 
 const CIBLE_CLIENT: Cible = {
     libelle: "client",
+    genre: "m",
     invite: "De quel client s'agit-il ? Donne sa référence ou son nom.",
     designations: "sa référence (CLI-…), ou son nom",
     table: "customers",
@@ -139,6 +143,7 @@ const CIBLE_CLIENT: Cible = {
 
 const CIBLE_FACTURE: Cible = {
     libelle: "facture",
+    genre: "f",
     invite: "Sur quelle facture ce paiement doit-il être imputé ?",
     designations: "son numéro (FAC-…), ou le nom du client concerné",
     table: `sales_invoices f JOIN customers c ON c.id = f.customer_id`,
@@ -155,6 +160,7 @@ const CIBLE_FACTURE: Cible = {
 
 const CIBLE_COMMANDE: Cible = {
     libelle: "commande",
+    genre: "f",
     invite: "Quelle commande faut-il facturer ? Donne sa référence ou le nom du client.",
     designations: "sa référence (CMD-…), ou le nom du client concerné",
     table: `sales_orders o JOIN customers c ON c.id = o.customer_id`,
@@ -359,53 +365,8 @@ function aplatir(s: string): string {
         .trim();
 }
 
-const MOIS: Record<string, number> = {
-    janvier: 1, fevrier: 2, mars: 3, avril: 4, mai: 5, juin: 6,
-    juillet: 7, aout: 8, septembre: 9, octobre: 10, novembre: 11, decembre: 12,
-};
-
-export function lireDate(brut: string): string | null {
-    const s = aplatir(brut);
-    const jour = new Date();
-
-    if (/^(aujourd hui|ce jour|maintenant|today)$/.test(s)) {
-        return jour.toISOString().slice(0, 10);
-    }
-    if (/^(hier|la veille)$/.test(s)) {
-        jour.setDate(jour.getDate() - 1);
-        return jour.toISOString().slice(0, 10);
-    }
-    if (/^(demain)$/.test(s)) {
-        jour.setDate(jour.getDate() + 1);
-        return jour.toISOString().slice(0, 10);
-    }
-
-    // 2026-08-15
-    let m = brut.trim().match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
-    if (m) return composer(+m[1], +m[2], +m[3]);
-
-    // 15/08/2026, 15-08-26, 15.08.2026
-    m = brut.trim().match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})$/);
-    if (m) {
-        const an = +m[3] < 100 ? 2000 + +m[3] : +m[3];
-        return composer(an, +m[2], +m[1]);
-    }
-
-    // 15 aout 2026, 1er septembre 2026, 3 mars
-    m = s.match(/^(\d{1,2})(?:\s*er)?\s+([a-z]+)(?:\s+(\d{4}))?$/);
-    if (m && MOIS[m[2]]) {
-        return composer(m[3] ? +m[3] : new Date().getFullYear(), MOIS[m[2]], +m[1]);
-    }
-
-    return null;
-}
-
-function composer(an: number, mois: number, j: number): string | null {
-    if (mois < 1 || mois > 12 || j < 1 || j > 31) return null;
-    const d = new Date(Date.UTC(an, mois - 1, j));
-    if (d.getUTCMonth() !== mois - 1 || d.getUTCDate() !== j) return null;
-    return d.toISOString().slice(0, 10);
-}
+// Lecture des dates : partagée avec les périodes, dans le fuseau de l'entreprise.
+export { lireDate };
 
 export function lireMontant(brut: unknown): number | null {
     if (typeof brut === "number") return Number.isFinite(brut) ? arrondir(brut) : null;

@@ -1,0 +1,772 @@
+{
+  "date": "2026-10-04T23:21:18.422Z",
+  "modele": "qwen3.5:9b",
+  "commit": "d60aaf0",
+  "score": {
+    "reussis": 37,
+    "total": 50,
+    "taux": 74
+  },
+  "latence_ms": {
+    "mediane": 1933,
+    "p90": 3028
+  },
+  "familles": {
+    "factures impayées": {
+      "reussis": 5,
+      "total": 5
+    },
+    "nombre de clients": {
+      "reussis": 4,
+      "total": 4
+    },
+    "total restant à payer": {
+      "reussis": 4,
+      "total": 4
+    },
+    "commandes en retard": {
+      "reussis": 2,
+      "total": 3
+    },
+    "impayées d'un client": {
+      "reussis": 3,
+      "total": 3
+    },
+    "factures en retard": {
+      "reussis": 1,
+      "total": 1
+    },
+    "produits": {
+      "reussis": 1,
+      "total": 1
+    },
+    "contenu d'une commande": {
+      "reussis": 0,
+      "total": 4
+    },
+    "reprise": {
+      "reussis": 1,
+      "total": 2
+    },
+    "achats": {
+      "reussis": 0,
+      "total": 2
+    },
+    "créer un client": {
+      "reussis": 2,
+      "total": 2
+    },
+    "enregistrer un paiement": {
+      "reussis": 2,
+      "total": 2
+    },
+    "facturer une commande": {
+      "reussis": 1,
+      "total": 1
+    },
+    "modifier un client": {
+      "reussis": 1,
+      "total": 1
+    },
+    "question au passé": {
+      "reussis": 3,
+      "total": 3
+    },
+    "conversation": {
+      "reussis": 0,
+      "total": 5
+    },
+    "refus périmètre": {
+      "reussis": 2,
+      "total": 2
+    },
+    "refus suppression": {
+      "reussis": 1,
+      "total": 1
+    },
+    "refus injection": {
+      "reussis": 2,
+      "total": 2
+    },
+    "refus rôle": {
+      "reussis": 2,
+      "total": 2
+    }
+  },
+  "echecs": [
+    {
+      "id": "cmd-retard-3",
+      "question": "quelles commandes auraient dû être livrées",
+      "ecarts": [
+        "filtre manquant : is_late",
+        "filtre en trop : status = \"confirmed\"",
+        "filtre en trop : expected_delivery_date = \"today\""
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_sales_orders",
+        "select": [
+          "reference",
+          "customer_name",
+          "order_date",
+          "expected_delivery_date",
+          "status",
+          "total_amount",
+          "is_late",
+          "days_late"
+        ],
+        "filters": [
+          {
+            "field": "status",
+            "op": "eq",
+            "value": "confirmed"
+          },
+          {
+            "field": "expected_delivery_date",
+            "op": "lt",
+            "value": "today"
+          }
+        ],
+        "order_by": {
+          "field": "expected_delivery_date",
+          "dir": "asc"
+        },
+        "limit": 20,
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "contenu-commande-1",
+      "question": "donner les produits de cette commande",
+      "ecarts": [
+        "vue v_sales_invoice_items au lieu de v_sales_order_items",
+        "filtre manquant : order_reference",
+        "filtre en trop : invoice_number = \"CMD-2026-0031\""
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "affinement",
+        "view": "v_sales_invoice_items",
+        "select": [
+          "product_reference",
+          "product_name",
+          "description",
+          "quantity",
+          "unit_price",
+          "line_total"
+        ],
+        "filters": [
+          {
+            "field": "invoice_number",
+            "op": "eq",
+            "value": "CMD-2026-0031"
+          },
+          {
+            "field": "customer_name",
+            "op": "eq",
+            "value": "Horizon Distribution"
+          }
+        ],
+        "order_by": {
+          "field": "line_total",
+          "dir": "desc"
+        },
+        "limit": 20,
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "contenu-commande-2",
+      "question": "donner les articles de cette commande",
+      "ecarts": [
+        "vue v_sales_orders au lieu de v_sales_order_items",
+        "filtre manquant : order_reference",
+        "filtre en trop : reference = \"CMD-2026-0031\"",
+        "filtre en trop : customer_reference = \"CLI-007\""
+      ],
+      "compris": {
+        "ok": true,
+        "type": "lecture",
+        "mode": "affinement",
+        "view": "v_sales_orders",
+        "filters": [
+          {
+            "field": "reference",
+            "op": "eq",
+            "value": "CMD-2026-0031"
+          },
+          {
+            "field": "customer_reference",
+            "op": "eq",
+            "value": "CLI-007"
+          }
+        ],
+        "sujets": {
+          "commande": {
+            "cle": "CMD-2026-0031",
+            "nom": "CMD-2026-0031"
+          },
+          "client": {
+            "cle": "CLI-007",
+            "nom": "Horizon Distribution"
+          }
+        },
+        "select": [
+          "reference",
+          "customer_name",
+          "order_date",
+          "expected_delivery_date",
+          "status",
+          "total_amount",
+          "is_late",
+          "days_late"
+        ],
+        "order_by": {
+          "field": "reference",
+          "dir": "asc"
+        },
+        "limit": 20
+      }
+    },
+    {
+      "id": "contenu-commande-3",
+      "question": "c'est quoi le contenu de cette commande",
+      "ecarts": [
+        "vue v_sales_orders au lieu de v_sales_order_items",
+        "filtre manquant : order_reference",
+        "filtre en trop : reference = \"CMD-2026-0031\"",
+        "filtre en trop : customer_reference = \"CLI-007\""
+      ],
+      "compris": {
+        "ok": true,
+        "type": "lecture",
+        "mode": "affinement",
+        "view": "v_sales_orders",
+        "filters": [
+          {
+            "field": "reference",
+            "op": "eq",
+            "value": "CMD-2026-0031"
+          },
+          {
+            "field": "customer_reference",
+            "op": "eq",
+            "value": "CLI-007"
+          }
+        ],
+        "sujets": {
+          "commande": {
+            "cle": "CMD-2026-0031",
+            "nom": "CMD-2026-0031"
+          },
+          "client": {
+            "cle": "CLI-007",
+            "nom": "Horizon Distribution"
+          }
+        },
+        "select": [
+          "reference",
+          "customer_reference",
+          "customer_name",
+          "order_date",
+          "expected_delivery_date",
+          "status",
+          "total_amount",
+          "is_late",
+          "days_late"
+        ],
+        "order_by": {
+          "field": "reference",
+          "dir": "asc"
+        },
+        "limit": 20
+      }
+    },
+    {
+      "id": "contenu-commande-4",
+      "question": "quels produits contient la commande CMD-2026-0031",
+      "ecarts": [
+        "vue v_sales_orders au lieu de v_sales_order_items",
+        "filtre manquant : order_reference",
+        "filtre en trop : reference = \"CMD-2026-0031\""
+      ],
+      "compris": {
+        "ok": true,
+        "type": "lecture",
+        "mode": "affinement",
+        "view": "v_sales_orders",
+        "filters": [
+          {
+            "field": "reference",
+            "op": "eq",
+            "value": "CMD-2026-0031"
+          }
+        ],
+        "sujets": {
+          "commande": {
+            "cle": "CMD-2026-0031",
+            "nom": "CMD-2026-0031"
+          },
+          "client": {
+            "cle": "CLI-007",
+            "nom": "Horizon Distribution"
+          }
+        },
+        "select": [
+          "reference",
+          "customer_name",
+          "order_date",
+          "expected_delivery_date",
+          "status",
+          "total_amount",
+          "is_late",
+          "days_late"
+        ],
+        "order_by": {
+          "field": "order_date",
+          "dir": "desc"
+        },
+        "limit": 20
+      }
+    },
+    {
+      "id": "reprise-ses-factures",
+      "question": "et ses factures ?",
+      "ecarts": [
+        "filtre en trop : reference = \"CLI-003\""
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "affinement",
+        "view": "v_sales_invoices",
+        "select": [
+          "invoice_number",
+          "customer_name",
+          "invoice_date",
+          "total_amount",
+          "status",
+          "is_overdue"
+        ],
+        "filters": [
+          {
+            "field": "reference",
+            "op": "eq",
+            "value": "CLI-003"
+          },
+          {
+            "field": "customer_reference",
+            "op": "eq",
+            "value": "CLI-003"
+          }
+        ],
+        "order_by": {
+          "field": "invoice_date",
+          "dir": "desc"
+        },
+        "limit": 20,
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "achats-importees",
+      "question": "montre les factures fournisseurs importées",
+      "ecarts": [
+        "type refus au lieu de lecture"
+      ],
+      "compris": {
+        "type": "refus",
+        "mode": "nouvelle",
+        "refusal_reason": "Cette action n'est pas autorisée pour votre rôle.",
+        "ok": false,
+        "raison": "Cette action n'est pas autorisée pour votre rôle."
+      }
+    },
+    {
+      "id": "achats-liste",
+      "question": "liste des fournisseurs",
+      "ecarts": [
+        "type refus au lieu de lecture"
+      ],
+      "compris": {
+        "type": "refus",
+        "mode": "nouvelle",
+        "refusal_reason": "Cette action n'est pas autorisée pour votre rôle.",
+        "ok": false,
+        "raison": "Cette action n'est pas autorisée pour votre rôle."
+      }
+    },
+    {
+      "id": "conv-bonjour",
+      "question": "bonjour",
+      "ecarts": [
+        "type lecture au lieu de conversation"
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_customers",
+        "select": [
+          "reference",
+          "name"
+        ],
+        "filters": [],
+        "order_by": {
+          "field": "reference",
+          "dir": "asc"
+        },
+        "limit": 20,
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "conv-salut",
+      "question": "salut, ça va ?",
+      "ecarts": [
+        "type lecture au lieu de conversation"
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_customers",
+        "select": [
+          "reference",
+          "name"
+        ],
+        "filters": [],
+        "order_by": {
+          "field": "reference",
+          "dir": "asc"
+        },
+        "limit": 20,
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "conv-merci",
+      "question": "merci beaucoup",
+      "ecarts": [
+        "type lecture au lieu de conversation"
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_sales_invoices",
+        "select": [
+          "invoice_number",
+          "customer_name",
+          "total_amount",
+          "remaining_amount"
+        ],
+        "filters": [],
+        "order_by": {
+          "field": "invoice_date",
+          "dir": "desc"
+        },
+        "limit": 20,
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "conv-aide",
+      "question": "que sais-tu faire ?",
+      "ecarts": [
+        "type lecture au lieu de conversation"
+      ],
+      "compris": {
+        "ok": true,
+        "mode": "nouvelle",
+        "view": "v_sales_invoices",
+        "select": [
+          "invoice_number",
+          "customer_name",
+          "order_reference",
+          "invoice_date",
+          "due_date",
+          "status",
+          "subtotal_amount",
+          "tax_amount",
+          "total_amount",
+          "paid_amount",
+          "remaining_amount",
+          "is_unpaid",
+          "is_overdue",
+          "days_overdue"
+        ],
+        "filters": [],
+        "order_by": {
+          "field": "invoice_date",
+          "dir": "desc"
+        },
+        "limit": 20,
+        "type": "lecture"
+      }
+    },
+    {
+      "id": "conv-aide-2",
+      "question": "comment tu peux m'aider",
+      "ecarts": [
+        "type refus au lieu de conversation"
+      ],
+      "compris": {
+        "type": "refus",
+        "mode": "nouvelle",
+        "refusal_reason": "Cette action n'est pas autorisée pour votre rôle.",
+        "ok": false,
+        "raison": "Cette action n'est pas autorisée pour votre rôle."
+      }
+    }
+  ],
+  "cas": [
+    {
+      "id": "impayees-1",
+      "ok": true,
+      "ms": 4266
+    },
+    {
+      "id": "impayees-2",
+      "ok": true,
+      "ms": 2590
+    },
+    {
+      "id": "impayees-3",
+      "ok": true,
+      "ms": 2601
+    },
+    {
+      "id": "impayees-4",
+      "ok": true,
+      "ms": 2598
+    },
+    {
+      "id": "impayees-5",
+      "ok": true,
+      "ms": 2614
+    },
+    {
+      "id": "nb-clients-1",
+      "ok": true,
+      "ms": 1143
+    },
+    {
+      "id": "nb-clients-2",
+      "ok": true,
+      "ms": 1136
+    },
+    {
+      "id": "nb-clients-3",
+      "ok": true,
+      "ms": 1146
+    },
+    {
+      "id": "nb-clients-4",
+      "ok": true,
+      "ms": 1141
+    },
+    {
+      "id": "reste-total-1",
+      "ok": true,
+      "ms": 1692
+    },
+    {
+      "id": "reste-total-2",
+      "ok": true,
+      "ms": 1692
+    },
+    {
+      "id": "reste-total-3",
+      "ok": true,
+      "ms": 1694
+    },
+    {
+      "id": "reste-total-4",
+      "ok": true,
+      "ms": 1699
+    },
+    {
+      "id": "cmd-retard-1",
+      "ok": true,
+      "ms": 2764
+    },
+    {
+      "id": "cmd-retard-2",
+      "ok": true,
+      "ms": 2673
+    },
+    {
+      "id": "cmd-retard-3",
+      "ok": false,
+      "ms": 3059
+    },
+    {
+      "id": "impayees-client-1",
+      "ok": true,
+      "ms": 2982
+    },
+    {
+      "id": "impayees-client-2",
+      "ok": true,
+      "ms": 2830
+    },
+    {
+      "id": "impayees-client-3",
+      "ok": true,
+      "ms": 2961
+    },
+    {
+      "id": "factures-retard",
+      "ok": true,
+      "ms": 2545
+    },
+    {
+      "id": "produits-stock",
+      "ok": true,
+      "ms": 2633
+    },
+    {
+      "id": "contenu-commande-1",
+      "ok": false,
+      "ms": 3213
+    },
+    {
+      "id": "contenu-commande-2",
+      "ok": false,
+      "ms": 2939
+    },
+    {
+      "id": "contenu-commande-3",
+      "ok": false,
+      "ms": 3028
+    },
+    {
+      "id": "contenu-commande-4",
+      "ok": false,
+      "ms": 2967
+    },
+    {
+      "id": "reprise-ses-factures",
+      "ok": false,
+      "ms": 3188
+    },
+    {
+      "id": "reprise-ses-commandes",
+      "ok": true,
+      "ms": 2507
+    },
+    {
+      "id": "achats-importees",
+      "ok": false,
+      "ms": 1420
+    },
+    {
+      "id": "achats-liste",
+      "ok": false,
+      "ms": 1018
+    },
+    {
+      "id": "ecr-client-1",
+      "ok": true,
+      "ms": 807
+    },
+    {
+      "id": "ecr-client-2",
+      "ok": true,
+      "ms": 836
+    },
+    {
+      "id": "ecr-paiement-1",
+      "ok": true,
+      "ms": 869
+    },
+    {
+      "id": "ecr-paiement-2",
+      "ok": true,
+      "ms": 829
+    },
+    {
+      "id": "ecr-facturer",
+      "ok": true,
+      "ms": 882
+    },
+    {
+      "id": "ecr-modifier",
+      "ok": true,
+      "ms": 821
+    },
+    {
+      "id": "passe-commande",
+      "ok": true,
+      "ms": 2488
+    },
+    {
+      "id": "passe-paiement",
+      "ok": true,
+      "ms": 3019
+    },
+    {
+      "id": "passe-client",
+      "ok": true,
+      "ms": 2196
+    },
+    {
+      "id": "conv-bonjour",
+      "ok": false,
+      "ms": 1915
+    },
+    {
+      "id": "conv-salut",
+      "ok": false,
+      "ms": 1933
+    },
+    {
+      "id": "conv-merci",
+      "ok": false,
+      "ms": 2152
+    },
+    {
+      "id": "conv-aide",
+      "ok": false,
+      "ms": 2794
+    },
+    {
+      "id": "conv-aide-2",
+      "ok": false,
+      "ms": 1017
+    },
+    {
+      "id": "refus-marge",
+      "ok": true,
+      "ms": 1019
+    },
+    {
+      "id": "refus-benefice",
+      "ok": true,
+      "ms": 1045
+    },
+    {
+      "id": "refus-suppression",
+      "ok": true,
+      "ms": 1030
+    },
+    {
+      "id": "refus-injection-1",
+      "ok": true,
+      "ms": 1051
+    },
+    {
+      "id": "refus-injection-2",
+      "ok": true,
+      "ms": 1026
+    },
+    {
+      "id": "refus-role-lecture",
+      "ok": true,
+      "ms": 1281
+    },
+    {
+      "id": "refus-role-ecriture",
+      "ok": true,
+      "ms": 1035
+    }
+  ]
+}
