@@ -117,7 +117,7 @@ export function libelleEvenement(evenement: string, entite: string | null): stri
 export type RapportEvaluation = {
     fichier: string;
     modele: string;
-    /** « reference » (a servi à la mise au point) ou « independant » (mesure seule). */
+    /** « reference » (mise au point), « independant » ou « validation2 » (mesures). */
     jeu: string;
     date: string;
     reussis: number;

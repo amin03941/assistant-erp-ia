@@ -6,6 +6,7 @@ import { fusionner } from "@/lib/conversations";
 import * as entites from "@/lib/entites";
 import { JEU, verifier, type Cas } from "./jeu";
 import { JEU_INDEPENDANT } from "./jeu-independant";
+import { JEU_VALIDATION_2 } from "./jeu-validation-2";
 
 /**
  * Évaluation de la compréhension contre le vrai modèle.
@@ -14,9 +15,12 @@ import { JEU_INDEPENDANT } from "./jeu-independant";
  *   LLM_FORCE=gemini npx vitest run --config vitest.eval.config.ts
  *   LLM_FORCE=gemini GEMINI_MODEL=gemini-3.5-flash npx vitest run --config vitest.eval.config.ts
  *
- * Jeu évalué : EVAL_JEU=independant pour le jeu indépendant (jeu-independant.ts),
- * figé avant toute exécution et jamais utilisé pour mettre au point le prompt ;
- * le jeu de référence (jeu.ts) sinon.
+ * Jeu évalué (EVAL_JEU) :
+ *   reference    jeu.ts — a servi à la mise au point du prompt (par défaut) ;
+ *   independant  jeu-independant.ts — figé avant exécution, a servi ensuite
+ *                au diagnostic des régressions ;
+ *   validation2  jeu-validation-2.ts — figé avant la correction de ces
+ *                régressions, il en mesure l'effet sans biais.
  *
  * Le lanceur s'exécute aussi sur une version antérieure du projet : il suit la
  * chaîne de traitement de la version évaluée (périodes et reprise grammaticale
@@ -45,8 +49,9 @@ const resultats: Resultat[] = [];
 const erreursApi: { id: string; message: string }[] = [];
 let quotaJourEpuise = false;
 
-const NOM_JEU = process.env.EVAL_JEU === "independant" ? "independant" : "reference";
-const CAS: Cas[] = NOM_JEU === "independant" ? JEU_INDEPENDANT : JEU;
+const JEUX: Record<string, Cas[]> = { reference: JEU, independant: JEU_INDEPENDANT, validation2: JEU_VALIDATION_2 };
+const NOM_JEU = process.env.EVAL_JEU && process.env.EVAL_JEU in JEUX ? process.env.EVAL_JEU : "reference";
+const CAS: Cas[] = JEUX[NOM_JEU];
 
 const distant = process.env.LLM_FORCE === "gemini";
 const modele = distant
@@ -61,7 +66,7 @@ if (reprise && (reprise.modele !== modele || (reprise.jeu ?? "reference") !== NO
 
 const debutExecution: string = reprise?.date ?? new Date().toISOString();
 const fichier: string = process.env.EVAL_REPRISE
-    ?? `eval/resultats/${debutExecution.slice(0, 16).replace(/[:T]/g, "-")}-${modele.replace(/[^\w.-]/g, "_")}${NOM_JEU === "independant" ? "-independant" : ""}.json`;
+    ?? `eval/resultats/${debutExecution.slice(0, 16).replace(/[:T]/g, "-")}-${modele.replace(/[^\w.-]/g, "_")}${NOM_JEU === "reference" ? "" : `-${NOM_JEU}`}.json`;
 const sessions: string[] = [...(reprise?.sessions ?? [debutExecution]), ...(reprise ? [new Date().toISOString()] : [])];
 
 // Cas déjà mesurés lors d'une exécution précédente : repris tels quels.
