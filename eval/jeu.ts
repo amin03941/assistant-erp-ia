@@ -28,6 +28,21 @@ export type Attendu =
         agregat?: string | null;
         /** Période attendue (code, colonne, mois), ou null pour « aucune période ». */
         periode?: { code: string; colonne?: string; mois?: string } | null;
+        /**
+         * Intervalle de dates attendu, jugé sur les filtres FINAUX quelle que soit
+         * la manière de l'exprimer (période nommée ou dates écrites en filtres) :
+         * [debut, fin[, fin absente pour « depuis le… ». Les filtres sur cette
+         * colonne sont alors exclus de la comparaison des filtres.
+         */
+        dates?: { colonne: string; debut?: string; fin?: string };
+        /** Colonne de l'agrégat (alternatives séparées par « | »). */
+        agregatChamp?: string;
+        /** Colonne de regroupement attendue (alternatives séparées par « | »). */
+        regroupement?: string;
+        /** Tri attendu : colonne (alternatives par « | », « resultat » pour un agrégat) et sens. */
+        tri?: { champ: string; sens?: "asc" | "desc" };
+        /** Nombre de lignes demandé (« les 5 plus… »). */
+        limite?: number;
     }
     | { type: "ecriture"; action: string }
     | { type: "refus" }
@@ -40,7 +55,8 @@ export type Cas = {
     role?: string;
     /** Tour précédent, pour les reprises (« cette commande », « ses factures »). */
     precedent?: { question: string; spec: any; row_count?: number };
-    attendu: Attendu;
+    /** Réponse attendue, ou réponses également acceptables quand l'interprétation est ouverte. */
+    attendu: Attendu | Attendu[];
 };
 
 const COMMANDE_0031 = {
@@ -311,24 +327,44 @@ export type Verdict = { ok: boolean; ecarts: string[] };
 
 const texte = (v: unknown) => String(v ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
+/** Une valeur attendue peut être "*", un booléen, un texte (inclusion, sans casse) ou une liste d'alternatives. */
 function valeurConvient(attendue: unknown, obtenue: unknown): boolean {
+    if (Array.isArray(attendue)) return attendue.some((a) => valeurConvient(a, obtenue));
     if (attendue === "*") return true;
     if (typeof attendue === "boolean") return obtenue === attendue || obtenue === String(attendue);
+    if (Array.isArray(obtenue)) return obtenue.some((o) => valeurConvient(attendue, o));
     return texte(obtenue).includes(texte(attendue));
 }
 
-/**
- * Compare la spécification produite à l'attendu. Pour une lecture : même vue,
- * mêmes filtres (une clé suffixée de « ? » est facultative), même agrégat.
- */
-export function verifier(cas: Cas, spec: any): Verdict {
+const alternatives = (cle: string) => cle.replace(/\?$/, "").split("|");
+
+/** Lendemain d'une date AAAA-MM-JJ : une borne « au plus le 30 » vaut « avant le 1er ». */
+function lendemain(iso: string): string {
+    const d = new Date(`${iso}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + 1);
+    return d.toISOString().slice(0, 10);
+}
+
+/** Intervalle [debut, fin[ que décrivent les filtres posés sur une colonne de date. */
+function intervalle(filtres: any[], colonnes: string[]): { debut?: string; fin?: string } {
+    const r: { debut?: string; fin?: string } = {};
+    for (const f of filtres) {
+        if (!colonnes.includes(f.field)) continue;
+        const v = String(f.value ?? "").slice(0, 10);
+        if (f.op === "gte") r.debut = v;
+        else if (f.op === "gt") r.debut = lendemain(v);
+        else if (f.op === "lt") r.fin = v;
+        else if (f.op === "lte") r.fin = lendemain(v);
+        else if (f.op === "eq") { r.debut = v; r.fin = lendemain(v); }
+    }
+    return r;
+}
+
+function verifierUn(a: Attendu, spec: any): string[] {
     const ecarts: string[] = [];
-    const a = cas.attendu;
     const type = spec?.type ?? (spec?.ok === false ? "refus" : "lecture");
 
-    if (type !== a.type) {
-        return { ok: false, ecarts: [`type ${type} au lieu de ${a.type}`] };
-    }
+    if (type !== a.type) return [`type ${type} au lieu de ${a.type}`];
 
     if (a.type === "ecriture" && spec.action?.code !== a.action) {
         ecarts.push(`action ${spec.action?.code} au lieu de ${a.action}`);
@@ -342,13 +378,17 @@ export function verifier(cas: Cas, spec: any): Verdict {
         const vues = Array.isArray(a.vue) ? a.vue : [a.vue];
         if (!vues.includes(spec.view)) ecarts.push(`vue ${spec.view} au lieu de ${vues.join(" ou ")}`);
 
+        const colonnesDate = a.dates ? alternatives(a.dates.colonne) : [];
+        const tous: any[] = spec.filters ?? [];
+
         if (a.filtres) {
-            // Les filtres calculés depuis la période sont jugés avec la période.
-            const filtres: any[] = (spec.filters ?? []).filter((f: any) => f.origine !== "periode");
+            // Les filtres calculés depuis une période, ou posés sur la colonne de
+            // date évaluée par ailleurs, ne sont pas jugés ici.
+            const filtres = tous.filter((f) => f.origine !== "periode" && !colonnesDate.includes(f.field));
             const utilises = new Set<number>();
             for (const [cle, valeur] of Object.entries(a.filtres)) {
                 const facultatif = cle.endsWith("?");
-                const colonnes = cle.replace(/\?$/, "").split("|");
+                const colonnes = alternatives(cle);
                 const i = filtres.findIndex((f, k) => !utilises.has(k) && colonnes.includes(f.field));
                 if (i < 0) {
                     if (!facultatif) ecarts.push(`filtre manquant : ${colonnes.join("|")}`);
@@ -364,9 +404,35 @@ export function verifier(cas: Cas, spec: any): Verdict {
             });
         }
 
+        if (a.dates) {
+            const r = intervalle(tous, colonnesDate);
+            if ((r.debut ?? null) !== (a.dates.debut ?? null) || (r.fin ?? null) !== (a.dates.fin ?? null)) {
+                ecarts.push(`dates [${r.debut ?? "…"} ; ${r.fin ?? "…"}[ au lieu de [${a.dates.debut ?? "…"} ; ${a.dates.fin ?? "…"}[`);
+            }
+        }
+
         if (a.agregat !== undefined) {
             const fn = spec.aggregate?.fn ?? null;
             if (fn !== a.agregat) ecarts.push(`agrégat ${fn} au lieu de ${a.agregat}`);
+        }
+
+        if (a.agregatChamp && !alternatives(a.agregatChamp).includes(spec.aggregate?.field)) {
+            ecarts.push(`agrégat sur ${spec.aggregate?.field} au lieu de ${a.agregatChamp}`);
+        }
+
+        if (a.regroupement && !alternatives(a.regroupement).includes(spec.group_by?.[0])) {
+            ecarts.push(`regroupement ${spec.group_by?.[0]} au lieu de ${a.regroupement}`);
+        }
+
+        if (a.tri) {
+            const champ = spec.order_by?.field;
+            const sens = String(spec.order_by?.dir ?? "").toLowerCase();
+            if (!alternatives(a.tri.champ).includes(champ)) ecarts.push(`tri sur ${champ} au lieu de ${a.tri.champ}`);
+            else if (a.tri.sens && sens !== a.tri.sens) ecarts.push(`tri ${sens} au lieu de ${a.tri.sens}`);
+        }
+
+        if (a.limite !== undefined && Number(spec.limit) !== a.limite) {
+            ecarts.push(`limite ${spec.limit} au lieu de ${a.limite}`);
         }
 
         if (a.periode !== undefined) {
@@ -383,5 +449,23 @@ export function verifier(cas: Cas, spec: any): Verdict {
         }
     }
 
-    return { ok: ecarts.length === 0, ecarts };
+    return ecarts;
+}
+
+/**
+ * Compare la spécification produite à l'attendu. Pour une lecture : même vue,
+ * mêmes filtres (une clé suffixée de « ? » est facultative), même agrégat, et
+ * selon le cas les dates, le regroupement, le tri, la limite. Quand plusieurs
+ * réponses sont acceptables, il suffit que l'une convienne ; les écarts
+ * rapportés sont ceux de la plus proche.
+ */
+export function verifier(cas: Cas, spec: any): Verdict {
+    const attendus = Array.isArray(cas.attendu) ? cas.attendu : [cas.attendu];
+    let meilleur: string[] | null = null;
+    for (const a of attendus) {
+        const ecarts = verifierUn(a, spec);
+        if (ecarts.length === 0) return { ok: true, ecarts: [] };
+        if (!meilleur || ecarts.length < meilleur.length) meilleur = ecarts;
+    }
+    return { ok: false, ecarts: meilleur ?? [] };
 }

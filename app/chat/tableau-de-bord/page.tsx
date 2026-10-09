@@ -84,9 +84,15 @@ function Contenu({ t }: { t: TableauDeBord }) {
         temporel: true,
     };
 
-    const depart = t.evaluations.find((e) => e.depart);
-    const derniersParModele = new Map<string, (typeof t.evaluations)[number]>();
-    for (const e of t.evaluations) if (!e.depart && !derniersParModele.has(e.modele)) derniersParModele.set(e.modele, e);
+    // Une ligne par mesure : départ, puis la plus récente par (jeu, modèle).
+    const lignesEvaluation = new Map<string, (typeof t.evaluations)[number]>();
+    for (const e of t.evaluations) {
+        const cle = `${e.depart ? "depart" : "actuel"}|${e.jeu}|${e.modele}`;
+        if (!lignesEvaluation.has(cle)) lignesEvaluation.set(cle, e);
+    }
+    const ordre = (e: (typeof t.evaluations)[number]) =>
+        (e.jeu === "independant" ? 0 : 10) + (e.depart ? 0 : 1) + (e.modele === MODELE_LOCAL ? 0 : 5);
+    const evaluations = [...lignesEvaluation.values()].sort((a, b) => ordre(a) - ordre(b));
 
     return (
         <div className="space-y-5">
@@ -164,7 +170,7 @@ function Contenu({ t }: { t: TableauDeBord }) {
 
             <Carte
                 titre="Évaluation de la compréhension"
-                sousTitre="Jeu de questions de référence rejoué contre le modèle ; chaque exécution laisse un rapport dans eval/resultats."
+                sousTitre="Le jeu indépendant, figé avant toute exécution, mesure ; le jeu de référence a servi à la mise au point. Rapports dans eval/resultats."
             >
                 {t.evaluations.length === 0
                     ? <p className="text-xs text-[#9AA0B8]">Aucun rapport d&apos;évaluation.</p>
@@ -172,6 +178,7 @@ function Contenu({ t }: { t: TableauDeBord }) {
                         <table className="w-full text-xs">
                             <thead>
                                 <tr className="border-b border-[#E8EAF2] text-left text-[#6B7089]">
+                                    <th className="py-2 pr-3 font-medium">Jeu</th>
                                     <th className="py-2 pr-3 font-medium">Mesure</th>
                                     <th className="py-2 pr-3 font-medium">Modèle</th>
                                     <th className="py-2 pr-3 font-medium">Date</th>
@@ -179,8 +186,11 @@ function Contenu({ t }: { t: TableauDeBord }) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {[...(depart ? [depart] : []), ...derniersParModele.values()].map((e) => (
+                                {evaluations.map((e) => (
                                     <tr key={e.fichier} className="border-b border-[#F0F1F7] last:border-0">
+                                        <td className="py-2 pr-3 text-[#4A4F6B]">
+                                            {e.jeu === "independant" ? "Indépendant" : "Référence (mise au point)"}
+                                        </td>
                                         <td className="py-2 pr-3 text-[#1B1F32]">
                                             {e.depart ? "Départ, avant les corrections"
                                                 : e.modele === MODELE_LOCAL ? "Actuelle, modèle local" : "Comparaison, modèle distant"}

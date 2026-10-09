@@ -1,11 +1,11 @@
 import { describe, it, expect, afterAll } from "vitest";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { execSync } from "node:child_process";
-import { analyserQuestion, MODELE_GEMINI } from "@/lib/llm";
+import * as llm from "@/lib/llm";
 import { fusionner } from "@/lib/conversations";
-import { repriseExplicite, reporterSujet, sujetsPrecedents } from "@/lib/entites";
-import { appliquerPeriode } from "@/lib/periodes";
+import * as entites from "@/lib/entites";
 import { JEU, verifier, type Cas } from "./jeu";
+import { JEU_INDEPENDANT } from "./jeu-independant";
 
 /**
  * Évaluation de la compréhension contre le vrai modèle.
@@ -13,6 +13,14 @@ import { JEU, verifier, type Cas } from "./jeu";
  *   npx vitest run --config vitest.eval.config.ts
  *   LLM_FORCE=gemini npx vitest run --config vitest.eval.config.ts
  *   LLM_FORCE=gemini GEMINI_MODEL=gemini-3.5-flash npx vitest run --config vitest.eval.config.ts
+ *
+ * Jeu évalué : EVAL_JEU=independant pour le jeu indépendant (jeu-independant.ts),
+ * figé avant toute exécution et jamais utilisé pour mettre au point le prompt ;
+ * le jeu de référence (jeu.ts) sinon.
+ *
+ * Le lanceur s'exécute aussi sur une version antérieure du projet : il suit la
+ * chaîne de traitement de la version évaluée (périodes et reprise grammaticale
+ * seulement si elle les possède).
  *
  * Reprise d'une exécution incomplète (quota quotidien atteint, par exemple) :
  * seuls les cas absents du rapport sont joués, et le rapport est complété.
@@ -37,24 +45,29 @@ const resultats: Resultat[] = [];
 const erreursApi: { id: string; message: string }[] = [];
 let quotaJourEpuise = false;
 
+const NOM_JEU = process.env.EVAL_JEU === "independant" ? "independant" : "reference";
+const CAS: Cas[] = NOM_JEU === "independant" ? JEU_INDEPENDANT : JEU;
+
 const distant = process.env.LLM_FORCE === "gemini";
-const modele = distant ? MODELE_GEMINI : (process.env.OLLAMA_MODEL ?? "qwen3.5:9b");
+const modele = distant
+    ? String((llm as Record<string, unknown>).MODELE_GEMINI ?? "gemini")
+    : (process.env.OLLAMA_MODEL ?? "qwen3.5:9b");
 const PAUSE_MS = Number(process.env.EVAL_PAUSE_MS ?? (distant ? 13_000 : 0));
 
 const reprise = process.env.EVAL_REPRISE ? JSON.parse(readFileSync(process.env.EVAL_REPRISE, "utf8")) : null;
-if (reprise && reprise.modele !== modele) {
-    throw new Error(`Reprise d'un rapport ${reprise.modele} avec le modèle ${modele} : les scores ne seraient pas comparables.`);
+if (reprise && (reprise.modele !== modele || (reprise.jeu ?? "reference") !== NOM_JEU)) {
+    throw new Error(`Reprise d'un rapport ${reprise.modele}/${reprise.jeu ?? "reference"} avec ${modele}/${NOM_JEU} : les scores ne seraient pas comparables.`);
 }
 
 const debutExecution: string = reprise?.date ?? new Date().toISOString();
 const fichier: string = process.env.EVAL_REPRISE
-    ?? `eval/resultats/${debutExecution.slice(0, 16).replace(/[:T]/g, "-")}-${modele.replace(/[^\w.-]/g, "_")}.json`;
+    ?? `eval/resultats/${debutExecution.slice(0, 16).replace(/[:T]/g, "-")}-${modele.replace(/[^\w.-]/g, "_")}${NOM_JEU === "independant" ? "-independant" : ""}.json`;
 const sessions: string[] = [...(reprise?.sessions ?? [debutExecution]), ...(reprise ? [new Date().toISOString()] : [])];
 
 // Cas déjà mesurés lors d'une exécution précédente : repris tels quels.
 const dejaMesures = new Set<string>();
 for (const c of reprise?.cas ?? []) {
-    const cas = JEU.find((x) => x.id === c.id);
+    const cas = CAS.find((x) => x.id === c.id);
     if (!cas) continue;
     const echec = (reprise.echecs ?? []).find((e: any) => e.id === c.id);
     resultats.push({ cas, ok: c.ok, ecarts: echec?.ecarts ?? [], ms: c.ms, spec: echec?.compris ?? null });
@@ -80,11 +93,11 @@ function delaiReessai(e: unknown): number | null {
 }
 
 /** Analyse avec réessais ; le temps mesuré exclut les attentes. */
-async function analyser(...args: Parameters<typeof analyserQuestion>) {
+async function analyser(...args: Parameters<typeof llm.analyserQuestion>) {
     for (let essai = 1; ; essai++) {
         const debut = Date.now();
         try {
-            const spec = await analyserQuestion(...args);
+            const spec = await llm.analyserQuestion(...args);
             return { spec, ms: Date.now() - debut };
         } catch (e) {
             const delai = delaiReessai(e);
@@ -102,9 +115,17 @@ async function comprendre(cas: Cas) {
     const { spec: brute, ms } = await analyser(cas.question, role, tours, null);
     const spec: any = fusionner(tours[0]?.query_spec, brute);
     if (spec.type !== "refus" && spec.type !== "ecriture" && spec.type !== "conversation" && spec.ok && spec.view) {
-        const p = appliquerPeriode(spec);
-        if (!p.ok) return { spec: { type: "refus", ok: false, raison: p.message }, ms };
-        spec.filters = reporterSujet(spec.reprise === true || repriseExplicite(cas.question), spec.view, spec.filters ?? [], sujetsPrecedents(tours)).filtres;
+        // Chaîne de la version évaluée : les périodes n'existent que dans la nouvelle.
+        const periodes = await import("@/lib/periodes").catch(() => null);
+        if (periodes) {
+            const p = periodes.appliquerPeriode(spec);
+            if (!p.ok) return { spec: { type: "refus", ok: false, raison: p.message }, ms };
+        }
+        const e = entites as Record<string, any>;
+        const sujets = e.sujetsPrecedents(tours);
+        spec.filters = typeof e.repriseExplicite === "function"
+            ? e.reporterSujet(spec.reprise === true || e.repriseExplicite(cas.question), spec.view, spec.filters ?? [], sujets).filtres
+            : e.reporterSujet(cas.question, spec.view, spec.filters ?? [], sujets).filtres;
     }
     return { spec, ms };
 }
@@ -125,9 +146,10 @@ function rapport() {
     return {
         date: debutExecution,
         sessions,
+        jeu: NOM_JEU,
         modele,
         commit,
-        complet: resultats.length === JEU.length,
+        complet: resultats.length === CAS.length,
         score: {
             reussis,
             total: resultats.length,
@@ -140,7 +162,7 @@ function rapport() {
             id: r.cas.id, question: r.cas.question, ecarts: r.ecarts, compris: r.spec,
         })),
         cas: [...resultats]
-            .sort((a, b) => JEU.indexOf(a.cas) - JEU.indexOf(b.cas))
+            .sort((a, b) => CAS.indexOf(a.cas) - CAS.indexOf(b.cas))
             .map((r) => ({ id: r.cas.id, ok: r.ok, ms: r.ms })),
     };
 }
@@ -150,8 +172,8 @@ function ecrireRapport() {
     writeFileSync(fichier, JSON.stringify(rapport(), null, 2));
 }
 
-describe(`compréhension — ${modele}`, () => {
-    for (const cas of JEU) {
+describe(`compréhension — ${modele} — jeu ${NOM_JEU}`, () => {
+    for (const cas of CAS) {
         it(`[${cas.famille}] ${cas.question}`, async () => {
             if (dejaMesures.has(cas.id)) return;
             if (quotaJourEpuise) {
@@ -179,7 +201,7 @@ describe(`compréhension — ${modele}`, () => {
     afterAll(() => {
         if (resultats.length === 0 && erreursApi.length === 0) return;
         const r = rapport();
-        console.log(`\n=== ${modele} : ${r.score.reussis}/${r.score.total} (${r.score.taux} %) — médiane ${r.latence_ms.mediane} ms, p90 ${r.latence_ms.p90} ms`
+        console.log(`\n=== ${modele} (jeu ${NOM_JEU}) : ${r.score.reussis}/${r.score.total} (${r.score.taux} %) — médiane ${r.latence_ms.mediane} ms, p90 ${r.latence_ms.p90} ms`
             + (erreursApi.length ? ` — ${erreursApi.length} cas non mesuré(s), erreur d'API` : ""));
         for (const [f, s] of Object.entries(r.familles)) {
             console.log(`  ${s.reussis === s.total ? "✓" : "✗"} ${f.padEnd(26)} ${s.reussis}/${s.total}`);

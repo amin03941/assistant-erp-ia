@@ -77,3 +77,48 @@ describe("notation de l'évaluation", () => {
         expect(verifier(cas, { type: "refus", ok: false }).ecarts).toEqual(["type refus au lieu de lecture"]);
     });
 });
+
+describe("notation : dates, alternatives, tri et limite", () => {
+    const lecture = (o: any) => ({ type: "lecture", ok: true, view: "v_sales_invoices", filters: [], ...o });
+    const cas = (attendu: any): Cas => ({ id: "t", famille: "t", question: "t", attendu });
+
+    it("juge les dates sur l'intervalle final, quelle que soit leur forme", () => {
+        const c = cas({ type: "lecture", vue: "v_sales_invoices", filtres: {}, dates: { colonne: "invoice_date", debut: "2026-07-01", fin: "2026-08-01" } });
+        // Forme « période » (nouvelle version) : bornes calculées, début inclus, fin exclue.
+        expect(verifier(c, lecture({ filters: [
+            { field: "invoice_date", op: "gte", value: "2026-07-01", origine: "periode" },
+            { field: "invoice_date", op: "lt", value: "2026-08-01", origine: "periode" },
+        ] })).ok).toBe(true);
+        // Forme « filtres écrits » (ancienne version) : fin incluse, équivalente.
+        expect(verifier(c, lecture({ filters: [
+            { field: "invoice_date", op: "gte", value: "2026-07-01" },
+            { field: "invoice_date", op: "lte", value: "2026-07-31" },
+        ] })).ok).toBe(true);
+        // Une année inventée est refusée.
+        expect(verifier(c, lecture({ filters: [
+            { field: "invoice_date", op: "gte", value: "2024-07-01" },
+            { field: "invoice_date", op: "lte", value: "2024-07-31" },
+        ] })).ecarts[0]).toContain("dates [2024-07-01");
+    });
+
+    it("accepte l'une des réponses possibles", () => {
+        const c = cas([
+            { type: "lecture", vue: "v_sales_invoices", agregat: "max" },
+            { type: "lecture", vue: "v_sales_invoices", tri: { champ: "total_amount", sens: "desc" }, limite: 1 },
+        ]);
+        expect(verifier(c, lecture({ order_by: { field: "total_amount", dir: "desc" }, limit: 1 })).ok).toBe(true);
+        expect(verifier(c, lecture({ aggregate: { fn: "max", field: "total_amount" } })).ok).toBe(true);
+        expect(verifier(c, lecture({})).ok).toBe(false);
+    });
+
+    it("vérifie le regroupement, la colonne de l'agrégat et une valeur parmi plusieurs", () => {
+        const c = cas({
+            type: "lecture", vue: "v_sales_invoices", filtres: { "status|is_unpaid": ["PAID", false] },
+            agregat: "sum", agregatChamp: "remaining_amount", regroupement: "customer_name|customer_reference",
+        });
+        const ok = lecture({ filters: [{ field: "is_unpaid", op: "eq", value: false }], aggregate: { fn: "sum", field: "remaining_amount" }, group_by: ["customer_name"] });
+        expect(verifier(c, ok).ok).toBe(true);
+        expect(verifier(c, { ...ok, group_by: ["status"] }).ok).toBe(false);
+        expect(verifier(c, { ...ok, filters: [{ field: "status", op: "eq", value: "CANCELLED" }] }).ok).toBe(false);
+    });
+});

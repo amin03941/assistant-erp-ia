@@ -117,6 +117,8 @@ export function libelleEvenement(evenement: string, entite: string | null): stri
 export type RapportEvaluation = {
     fichier: string;
     modele: string;
+    /** « reference » (a servi à la mise au point) ou « independant » (mesure seule). */
+    jeu: string;
     date: string;
     reussis: number;
     total: number;
@@ -140,6 +142,7 @@ export function rapportsEvaluation(dossier = join(process.cwd(), "eval", "result
             rapports.push({
                 fichier: f,
                 modele: String(r.modele ?? "?"),
+                jeu: String(r.jeu ?? "reference"),
                 date: String(r.date ?? ""),
                 reussis: Number(r.score?.reussis ?? 0),
                 total: Number(r.score?.total ?? 0),
