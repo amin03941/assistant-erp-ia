@@ -4,6 +4,7 @@ import { lireTableauDeBord, type TableauDeBord } from "@/lib/observabilite";
 import Sidebar from "@/components/sidebar";
 import GraphiqueBarres from "@/components/graphique";
 import type { Graphique } from "@/lib/graphique";
+import { ROLES_SUPERVISION } from "@/lib/visibilite";
 
 /**
  * Tableau de bord : utilisation et comportement de l'assistant.
@@ -13,7 +14,7 @@ import type { Graphique } from "@/lib/graphique";
 
 export const dynamic = "force-dynamic";
 
-const ROLES_TABLEAU = ["MANAGER", "ADMIN"];
+const ROLES_TABLEAU = ROLES_SUPERVISION;
 const MODELE_LOCAL = process.env.OLLAMA_MODEL ?? "qwen3.5:9b";
 
 const MOIS_COURTS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];

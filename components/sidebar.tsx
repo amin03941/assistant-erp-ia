@@ -1,13 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "@/auth";
+import { ROLES_SUPERVISION } from "@/lib/visibilite";
 import {
     Sparkles, LayoutDashboard, Users, Package, ClipboardList,
     FileText, CreditCard, ShoppingCart, BarChart3, Settings, HelpCircle, LogOut,
 } from "lucide-react";
 
 /** Rôles qui voient le tableau de bord : un suivi du système, pas une vue métier. */
-const ROLES_TABLEAU = ["MANAGER", "ADMIN"];
+const ROLES_TABLEAU = ROLES_SUPERVISION;
 
 const MODULES = [
     { icone: Users, libelle: "Clients" },

@@ -68,9 +68,10 @@ salutation, et seulement s'il ne contient aucun chiffre ni nom interne.
 
 **La transparence.** Pendant le traitement, l'interface affiche les étapes réellement
 franchies (compréhension, vérification, exécution). Sous chaque réponse, « Comment j'ai
-compris » détaille les données consultées, les conditions, le calcul, puis la requête
-SQL exécutée et ses paramètres : une mauvaise compréhension se voit avant qu'on se fie
-au résultat.
+compris » détaille, en français, les données consultées, les conditions et le calcul : une
+mauvaise compréhension se voit avant qu'on se fie au résultat. La requête SQL exécutée et
+ses paramètres n'y figurent que pour le responsable et l'administrateur : pour les autres
+rôles, le serveur ne les transmet pas, et les refus ne citent aucun nom interne.
 
 **Les graphiques.** Un regroupement (« le reste à payer par client ») ou une série
 déclarée au catalogue (le chiffre d'affaires mensuel) est aussi affiché en histogramme,
@@ -246,7 +247,7 @@ Montre la commande CMD-2026-0031, puis : quels produits contient cette commande 
 
 La conversation garde le contexte : un tour affine le précédent sans répéter le client,
 et « cette commande » reprend la commande affichée. Sous chaque réponse, « Comment j'ai
-compris » montre ce qui a été retenu et la requête exécutée.
+compris » montre ce qui a été retenu (et, pour le responsable, la requête exécutée).
 
 ### Création et modification
 
@@ -356,10 +357,10 @@ libellés des réponses et les questions de clarification en découlent.
 npm test
 ```
 
-241 tests couvrent la normalisation des valeurs (dont les valeurs codées des filtres), la validation des actions et des
+247 tests couvrent la normalisation des valeurs (dont les valeurs codées des filtres), la validation des actions et des
 requêtes, les périodes, la résolution des entités, la grammaire de sortie par rôle, la
 rédaction des réponses, les graphiques, les indicateurs du tableau de bord, l'extraction
-OCR et la préparation du texte pour la voix. Cinq d'entre eux sont des tests de
+OCR, la préparation du texte pour la voix et ce que chaque rôle reçoit des détails techniques. Cinq d'entre eux sont des tests de
 propriété appliqués à toutes les vues du catalogue : aucun nombre absent des données,
 aucune condition non demandée, accord singulier/pluriel.
 

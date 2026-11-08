@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import * as conv from "@/lib/conversations";
+import { detailsPourRole } from "@/lib/visibilite";
 
 export async function GET(req: NextRequest) {
     let session;
@@ -21,5 +22,10 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ erreur: "Conversation introuvable." }, { status: 403 });
     }
 
-    return NextResponse.json({ messages: await conv.messagesDe(id) });
+    // Relecture : mêmes règles qu'en direct, avec le rôle de la session courante.
+    const messages = (await conv.messagesDe(id)).map((m) => ({
+        ...m,
+        structured_data: m.structured_data ? detailsPourRole(m.structured_data, session.role) : m.structured_data,
+    }));
+    return NextResponse.json({ messages });
 }

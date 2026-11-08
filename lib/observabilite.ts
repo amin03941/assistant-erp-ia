@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { CATALOGUE } from "./catalogue";
 import { ACTIONS } from "./actions";
+import { traduireNomsInternes } from "./visibilite";
 
 /**
  * Tableau de bord : comment l'assistant est utilisé, et comment il se comporte.
@@ -84,20 +85,9 @@ export function libelleIntention(intent: string): string {
         ?? intent;
 }
 
-/**
- * Traduit les noms internes d'un texte dans les mots du catalogue :
- * « v_customers » → « clients », « customer_reference » → « référence client ».
- * Les premiers refus, antérieurs à la règle qui l'interdit au modèle, citaient
- * ces noms ; on les montre traduits, sans les cacher.
- */
-export function traduireNomsInternes(texte: string): string {
-    const noms = new Map<string, string>();
-    for (const [vue, v] of Object.entries(CATALOGUE)) {
-        noms.set(vue, v.intitule ?? v.entite.pluriel);
-        for (const [col, c] of Object.entries(v.colonnes)) if (col.includes("_") && !noms.has(col)) noms.set(col, c.libelle);
-    }
-    return texte.replace(/\b[a-z]+(?:_[a-z]+)+\b/g, (m) => noms.get(m) ?? m);
-}
+// Les premiers refus, antérieurs à la règle qui l'interdit au modèle, citaient
+// des noms internes : le tableau de bord les montre traduits, sans les cacher.
+export { traduireNomsInternes };
 
 const EVENEMENTS: Record<string, string> = { CREATE: "Création", UPDATE: "Modification", LOGIN: "Connexion" };
 const ENTITES: Record<string, string> = {

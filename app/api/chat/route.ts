@@ -11,6 +11,7 @@ import { normaliserCodes, repriseExplicite, resoudreFiltres, reporterSujet, suje
 import { repondreConversation } from "@/lib/dialogue";
 import { appliquerPeriode } from "@/lib/periodes";
 import { donneesGraphique } from "@/lib/graphique";
+import { detailsPourRole, traduireNomsInternes } from "@/lib/visibilite";
 
 /**
  * Traitement d'une question, de bout en bout.
@@ -62,7 +63,9 @@ async function traiter(
         conversationId: convId, userMessageId: msgUser, userId: session.userId, role: session.role,
     });
 
-    const refuser = async (raison: string, extra: Record<string, unknown> = {}, spec?: unknown) => {
+    const refuser = async (motif: string, extra: Record<string, unknown> = {}, spec?: unknown) => {
+        // Un refus rédigé par le modèle peut citer une vue, une colonne ou un code de rôle.
+        const raison = traduireNomsInternes(motif);
         const m = await conv.ajouterMessage(convId, "ASSISTANT", raison);
         await conv.cloturerRequete(reqId, {
             status: "REFUSED", refusal_reason: raison, response_message_id: m,
@@ -186,7 +189,8 @@ async function traiter(
             row_count: res.rowCount, duration_ms: Date.now() - debut, executed_at: new Date(),
         });
 
-        return { corps: { conversationId: convId, texte, ...details } };
+        // La requête est enregistrée avec le message, mais n'est envoyée qu'aux rôles de supervision.
+        return { corps: { conversationId: convId, texte, ...detailsPourRole(details, session.role) } };
 
     } catch (e) {
         console.error(e);
